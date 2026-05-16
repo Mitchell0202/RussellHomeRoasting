@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Russell Home Roasting</title>
+  <title>Russell Home Roasting — About</title>
   <style>
     :root {
       --bg: #f7f5f0;
@@ -11,7 +11,6 @@
       --line: #0e0d0b;
       --muted: #7a7670;
       --soft: #dedad2;
-      --accent: #f7f5f0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,7 +25,6 @@
       font-family: Georgia, "Times New Roman", Times, serif;
     }
 
-    /* ── PAGE GRID ── */
     .page {
       display: grid;
       grid-template-columns: 1fr;
@@ -40,12 +38,10 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── LEFT RAIL (brand + vertical text) ── */
+    /* ── LEFT RAIL ── */
     .rail {
       position: fixed;
-      left: 0;
-      top: 0;
-      bottom: 0;
+      left: 0; top: 0; bottom: 0;
       width: 52px;
       border-right: 1px solid var(--line);
       display: flex;
@@ -58,8 +54,7 @@
     }
 
     .rail-dot {
-      width: 7px;
-      height: 7px;
+      width: 7px; height: 7px;
       border-radius: 50%;
       background: var(--fg);
     }
@@ -120,37 +115,79 @@
     .body-grid {
       display: grid;
       grid-template-columns: 1fr 140px;
-      grid-template-rows: 1fr auto;
       border-bottom: 1px solid var(--soft);
     }
 
-    /* ── HERO ── */
-    .hero {
-      padding: 56px 28px 56px;
+    /* ── MAIN PANEL ── */
+    .main-panel {
+      padding: 56px 28px 72px;
       border-right: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
     }
 
-    .hero h2 {
-      font-size: clamp(2.6rem, 9vw, 5.5rem);
+    /* ── HERO TEXT ── */
+    .about-hero {
+      margin-bottom: 52px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .about-hero h2 {
+      font-size: clamp(2.4rem, 8vw, 5rem);
       font-weight: 600;
       line-height: 1.0;
       letter-spacing: -0.02em;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
 
-    .hero h2 em {
+    .about-hero h2 em {
       font-style: italic;
       font-weight: 400;
     }
 
-    .hero p {
-      font-size: 0.93rem;
-      line-height: 1.7;
+    .about-hero p {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: var(--fg);
+      max-width: 520px;
+    }
+
+    .about-hero p + p {
+      margin-top: 18px;
+    }
+
+    /* ── DETAILS GRID ── */
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px 48px;
+      max-width: 600px;
+    }
+
+    .detail-block {}
+
+    .detail-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
       color: var(--muted);
-      max-width: 340px;
+      font-family: Arial, Helvetica, sans-serif;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-value {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--fg);
+      margin-top: 10px;
+    }
+
+    .detail-value strong {
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-weight: 600;
+      font-size: 1rem;
     }
 
     /* ── SIDE NAV ── */
@@ -179,12 +216,11 @@
       white-space: nowrap;
     }
 
-    .side-nav a:hover {
+    .side-nav a:hover,
+    .side-nav a.active {
       background: var(--fg);
       color: var(--bg);
     }
-
-
 
     /* ── FOOTER ── */
     footer {
@@ -205,14 +241,16 @@
       .rail { display: none; }
       .content { margin-left: 0; }
 
-      .body-grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
+      .body-grid { grid-template-columns: 1fr; }
+
+      .main-panel {
+        border-right: none;
+        padding: 40px 22px 56px;
       }
 
-      .hero {
-        border-right: none;
-        padding: 48px 22px;
+      .details-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
       }
 
       .side-nav {
@@ -238,7 +276,6 @@
 
       .side-nav a:nth-child(even) { border-right: none; }
 
-      .batch-strip { padding: 16px 22px; gap: 16px; }
       footer { padding: 14px 22px; }
       header { padding: 24px 22px 20px; }
     }
@@ -258,26 +295,81 @@
       <header>
         <h1 class="brand">
           Russell Home Roasting
-          <span></span>
+          <span>About</span>
         </h1>
       </header>
 
       <div class="body-grid">
 
-        <section class="hero">
-          <h2>Roasted here.<br><em>Traced there.</em></h2>
-          <p>Home roasted coffee from Appleton, Wisconsin. Every bag has a story — where the coffee grew, how it was roasted, and what it tastes like.</p>
-        </section>
+        <div class="main-panel">
+
+          <div class="about-hero">
+            <h2>From Curiosity<br><em>to Traceability.</em></h2>
+            <p>Content 1</p>
+            <p>Content 2</p>
+          </div>
+
+          <div class="details-grid">
+
+            <div class="detail-block">
+              <div class="detail-label">Location</div>
+              <div class="detail-value">
+                <strong>Appleton, Wisconsin</strong><br>
+                Roasted at home, shared locally.
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <div class="detail-label">Roaster</div>
+              <div class="detail-value">
+                <strong>Skywalker V1</strong><br>
+				Artisan Scope
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <div class="detail-label">Sourcing</div>
+              <div class="detail-value">
+                <strong>Direct &amp; traceable</strong><br>
+                Green beans from trusted importers with farm-level transparency.
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <div class="detail-label">Established</div>
+              <div class="detail-value">
+                <strong>2026</strong><br>
+                Still learning. Always roasting.
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <div class="detail-label">Contact</div>
+              <div class="detail-value">
+                Questions, orders, or just want to talk coffee?<br>
+                <strong>hello@russellroasting.com</strong>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <div class="detail-label">Philosophy</div>
+              <div class="detail-value">
+                Respecting everyone involved from farm to cup by being intentional with each roast. Every bag has a batch number. Every batch has a story.
+              </div>
+            </div>
+
+          </div>
+
+        </div>
 
         <nav class="side-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
           <a href="journal.html">Journal</a>
           <a href="origins.html">Origins</a>
-          <a href="batch-lookup.html">Batches</a>
-          <a href="https://forms.gle/ZgAe8ggtJFaLG8N4A">Order</a>
-          <a href="about.html">About</a>
+          <a href="batch.html">Batches</a>
+          <a href="order.html">Order</a>
+          <a href="about.html" class="active">About</a>
         </nav>
-
-
 
       </div>
 

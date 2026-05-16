@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Russell Home Roasting — Origins</title>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --fg: #0e0d0b;
+      --line: #0e0d0b;
+      --muted: #7a7670;
+      --soft: #dedad2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+    }
+
+    body {
+      font-family: Georgia, "Times New Roman", Times, serif;
+    }
+
+    /* ── PAGE GRID ── */
+    .page {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 100vh;
+      opacity: 0;
+      transform: translateY(40px);
+      animation: rise 0.4s ease-out forwards;
+    }
+
+    @keyframes rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── LEFT RAIL ── */
+    .rail {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 52px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0;
+      z-index: 10;
+      background: var(--bg);
+    }
+
+    .rail-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--fg);
+    }
+
+    .rail-text {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-size: 0.8rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── MAIN CONTENT ── */
+    .content {
+      margin-left: 52px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 32px 28px 24px;
+      border-bottom: 3px solid var(--line);
+      position: relative;
+      margin-bottom: 5px;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0; right: 0;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .brand {
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+    }
+
+    .brand span {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* ── BODY GRID ── */
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    /* ── MAIN PANEL ── */
+    .main-panel {
+      padding: 48px 28px 64px;
+      border-right: 1px solid var(--line);
+    }
+
+    /* ── SECTION INTRO ── */
+    .section-intro {
+      margin-bottom: 40px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--soft);
+    }
+
+    .section-intro h2 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .section-intro h2 em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .section-intro p {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 380px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    /* ── ORIGIN CARDS GRID ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    /* ── ORIGIN CARD ── */
+    .origin-card {
+      background: var(--bg);
+      padding: 28px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: background 0.18s;
+      position: relative;
+    }
+
+    .origin-card:hover {
+      background: #f0ece4;
+    }
+
+    /* Country / hero label */
+    .card-country {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 600;
+      line-height: 1.0;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+
+    .card-city {
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: Arial, Helvetica, sans-serif;
+      margin-bottom: 22px;
+    }
+
+    /* Divider */
+    .card-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--line);
+      margin-bottom: 20px;
+    }
+
+    /* Data rows */
+    .card-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      flex: 1;
+    }
+
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--soft);
+      font-size: 0.86rem;
+    }
+
+    .card-row:last-child {
+      border-bottom: none;
+    }
+
+    .card-label {
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.68rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .card-value {
+      text-align: right;
+      line-height: 1.4;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.84rem;
+    }
+
+    /* Flavor notes get italic serif treatment */
+    .card-row.flavor .card-value {
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--fg);
+    }
+
+    /* ── SIDE NAV ── */
+    .side-nav {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .side-nav a {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--fg);
+      text-decoration: none;
+      border: 1px solid var(--soft);
+      margin-bottom: -1px;
+      transition: background 0.15s, color 0.15s;
+      padding: 20px 0;
+      white-space: nowrap;
+    }
+
+    .side-nav a:hover,
+    .side-nav a.active {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      border-top: 1px solid var(--soft);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 560px) {
+      .rail { display: none; }
+      .content { margin-left: 0; }
+
+      .body-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main-panel {
+        border-right: none;
+        padding: 32px 22px 48px;
+      }
+
+      .side-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line);
+      }
+
+      .side-nav a {
+        writing-mode: horizontal-tb;
+        transform: none;
+        flex: none;
+        width: 50%;
+        justify-content: flex-start;
+        padding: 16px 22px;
+        font-size: 0.8rem;
+        border: none;
+        border-bottom: 1px solid var(--soft);
+        border-right: 1px solid var(--soft);
+        margin-bottom: 0;
+        white-space: normal;
+      }
+
+      .side-nav a:nth-child(even) { border-right: none; }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      footer { padding: 14px 22px; }
+      header { padding: 24px 22px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="rail" aria-hidden="true">
+    <div class="rail-dot"></div>
+    <div class="rail-text"> · Estd 2026 · </div>
+    <div class="rail-dot"></div>
+  </aside>
+
+  <main class="page">
+    <div class="content">
+
+      <header>
+        <h1 class="brand">
+          Russell Home Roasting
+          <span>Origins</span>
+        </h1>
+      </header>
+
+      <div class="body-grid">
+
+        <div class="main-panel">
+
+          <div class="section-intro">
+            <h2>Where it<br><em>all begins.</em></h2>
+            <p>Every cup starts with a place. Responsibly sourced with maximum traceability in mind. Know what you're drinking and learn where it came from . . .</p>
+          </div>
+
+          <!--
+            ═══════════════════════════════════════════════
+            ORIGIN CARDS — add or remove cards here.
+            Copy one .origin-card block to add a new origin.
+            ═══════════════════════════════════════════════
+          -->
+          <div class="cards-grid" id="origins-grid">
+
+            <article class="origin-card">
+              <div class="card-country">Ethiopia</div>
+              <div class="card-city">Guji Zone</div>
+              <div class="card-divider"></div>
+              <div class="card-rows">
+                <div class="card-row">
+                  <div class="card-label">Region</div>
+                  <div class="card-value">Oromia</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Processing</div>
+                  <div class="card-value">Natural</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Elevation</div>
+                  <div class="card-value">1,900 – 2,200 m</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Cultivar</div>
+                  <div class="card-value">Heirloom Ethiopian</div>
+                </div>
+                <div class="card-row flavor">
+                  <div class="card-label">Flavor Notes</div>
+                  <div class="card-value">Blueberry, jasmine, dark chocolate</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="origin-card">
+              <div class="card-country">Colombia</div>
+              <div class="card-city">Huila</div>
+              <div class="card-divider"></div>
+              <div class="card-rows">
+                <div class="card-row">
+                  <div class="card-label">Region</div>
+                  <div class="card-value">Huila Department</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Processing</div>
+                  <div class="card-value">Washed</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Elevation</div>
+                  <div class="card-value">1,700 – 2,000 m</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Cultivar</div>
+                  <div class="card-value">Caturra, Castillo</div>
+                </div>
+                <div class="card-row flavor">
+                  <div class="card-label">Flavor Notes</div>
+                  <div class="card-value">Red apple, caramel, brown sugar</div>
+                </div>
+              </div>
+            </article>
+
+            <article class="origin-card">
+              <div class="card-country">Guatemala</div>
+              <div class="card-city">Antigua</div>
+              <div class="card-divider"></div>
+              <div class="card-rows">
+                <div class="card-row">
+                  <div class="card-label">Region</div>
+                  <div class="card-value">Sacatepéquez</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Processing</div>
+                  <div class="card-value">Washed</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Elevation</div>
+                  <div class="card-value">1,500 – 1,700 m</div>
+                </div>
+                <div class="card-row">
+                  <div class="card-label">Cultivar</div>
+                  <div class="card-value">Bourbon, Typica</div>
+                </div>
+                <div class="card-row flavor">
+                  <div class="card-label">Flavor Notes</div>
+                  <div class="card-value">Milk chocolate, almond, subtle spice</div>
+                </div>
+              </div>
+            </article>
+
+          </div>
+          <!-- end .cards-grid -->
+
+        </div>
+
+        <nav class="side-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="journal.html">Journal</a>
+          <a href="origins.html" class="active">Origins</a>
+          <a href="batch-lookup.html">Batches</a>
+          <a href="https://forms.gle/ZgAe8ggtJFaLG8N4A">Order</a>
+          <a href="about.html">About</a>
+        </nav>
+
+      </div>
+
+      <footer>
+        <span>Russell Home Roasting · Appleton, WI</span>
+        <span>built by hand, like the coffee</span>
+      </footer>
+
+    </div>
+  </main>
+
+</body>
+</html>
