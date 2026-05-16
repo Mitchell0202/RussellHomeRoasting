@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Post &amp; Bean — Roast Record Lookup</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #000000;
+      --line: #000000;
+      --muted: #666666;
+      --soft: #e8e8e8;
+      --button-bg: #000000;
+      --button-fg: #ffffff;
+      --button-hover-bg: #ffffff;
+      --button-hover-fg: #000000;
+      --field-bg: #ffffff;
+      --field-fg: #000000;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --fg: #ffffff;
+        --line: #ffffff;
+        --muted: #b5b5b5;
+        --soft: #333333;
+        --button-bg: #ffffff;
+        --button-fg: #000000;
+        --button-hover-bg: #000000;
+        --button-hover-fg: #ffffff;
+        --field-bg: #000000;
+        --field-fg: #ffffff;
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 18px 56px;
+    }
+
+    .masthead {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: clamp(2rem, 6vw, 3.25rem);
+      line-height: 1;
+      letter-spacing: 0.02em;
+      margin: 0;
+      font-weight: 600;
+    }
+
+    .subhead {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .lookup {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      padding: 16px;
+    }
+
+    .lookup-label,
+    .section-title,
+    .chart-title {
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: 1.05rem;
+      margin: 0 0 10px;
+      letter-spacing: 0.01em;
+    }
+
+    .lookup-help,
+    .error-state,
+    .meta,
+    .chart-note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .lookup-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: var(--field-bg);
+      color: var(--field-fg);
+      padding: 12px 14px;
+      font-size: 1rem;
+      border-radius: 0;
+      outline: none;
+      text-transform: uppercase;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--muted);
+      opacity: 1;
+    }
+
+    input[type="text"]:focus {
+      outline: 2px solid var(--line);
+      outline-offset: 1px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--button-bg);
+      color: var(--button-fg);
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: var(--button-hover-bg);
+      color: var(--button-hover-fg);
+    }
+
+    .last-link {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .record {
+      margin-top: 24px;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: record-fade-in 180ms ease forwards;
+    }
+
+    .record-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+      margin-bottom: 18px;
+    }
+
+    .record-id {
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: clamp(1.25rem, 4vw, 2rem);
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .record-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 24px;
+    }
+
+    .section {
+      min-width: 0;
+    }
+
+    .rows {
+      border-top: 1px solid var(--line);
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--soft);
+      font-size: 0.96rem;
+    }
+
+    .row-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.76rem;
+    }
+
+    .row-value {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .chart-wrap {
+      border: 1px solid var(--line);
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .axis,
+    .grid,
+    .curve,
+    .marker {
+      fill: none;
+      stroke: var(--fg);
+    }
+
+    .axis { stroke-width: 1; }
+    .grid { stroke-width: 0.5; stroke-dasharray: 2 3; }
+    .curve {
+      stroke-width: 2;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: curve-draw 1.2s ease forwards;
+    }
+    .marker { stroke-width: 1; stroke-dasharray: 5 4; }
+
+    .axis-text {
+      fill: var(--fg);
+      font-size: 11px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    @keyframes record-fade-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes curve-draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .record {
+        opacity: 1;
+        transform: none;
+        animation: none;
+      }
+
+      .curve {
+        stroke-dasharray: none;
+        stroke-dashoffset: 0;
+        animation: none;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page { padding: 18px 14px 42px; }
+      .lookup-row { flex-direction: column; }
+      .record-header { flex-direction: column; align-items: start; }
+      .record-grid { grid-template-columns: 1fr; }
+      .row { flex-direction: column; gap: 2px; }
+      .row-value { text-align: left; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <h1 class="brand">Post &amp; Bean</h1>
+      <div class="subhead">Roast Record Lookup</div>
+    </header>
+
+    <section class="lookup" aria-labelledby="lookup-title">
+      <h2 class="lookup-label" id="lookup-title">Enter Batch No.</h2>
+      <form id="lookup-form" class="lookup-row" autocomplete="off">
+        <input id="batch-input" name="batch" type="text" placeholder="PB-XXXX-XXXX" aria-label="Batch number" autofocus />
+        <button type="submit">View</button>
+      </form>
+      <div id="last-viewed" class="lookup-help" style="margin-top:10px;"></div>
+    </section>
+
+    <section id="result" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const LAST_KEY = 'pb-last';
+
+    const resultEl = document.getElementById('result');
+    const form = document.getElementById('lookup-form');
+    const input = document.getElementById('batch-input');
+    const lastViewedEl = document.getElementById('last-viewed');
+
+    function normalizeBatch(value) {
+      return String(value || '').trim().toUpperCase();
+    }
+
+    async function fetchBatch(batch) {
+      const response = await fetch(`data/${encodeURIComponent(batch)}.json`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Batch not found: ${response.status}`);
+      }
+      return await response.json();
+    }
+
+    function formatDate(value) {
+      const date = new Date(value + 'T00:00:00');
+      return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function secondsToMinSec(total) {
+      const minutes = Math.floor(total / 60);
+      const seconds = total % 60;
+      return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function renderRows(rows) {
+      return `
+        <div class="rows">
+          ${rows.map(row => `
+            <div class="row">
+              <div class="row-label">${row.label}</div>
+              <div class="row-value">${row.value}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderChart(points, firstCrackS, totalTimeS) {
+      if (!Array.isArray(points) || !points.length) {
+        return '<div class="error-state">No roast curve data available.</div>';
+      }
+
+      const width = 700;
+      const height = 280;
+      const pad = { top: 16, right: 18, bottom: 36, left: 42 };
+      const maxX = Math.max(totalTimeS || 0, ...points.map(p => p.time_s), 1);
+      const temps = points.map(p => p.bean_temp_f);
+      const minYData = Math.min(...temps);
+      const maxYData = Math.max(...temps);
+      const minY = Math.floor((minYData - 20) / 25) * 25;
+      const maxY = Math.ceil((maxYData + 10) / 25) * 25;
+      const innerW = width - pad.left - pad.right;
+      const innerH = height - pad.top - pad.bottom;
+      const x = t => pad.left + (t / maxX) * innerW;
+      const y = temp => pad.top + (1 - ((temp - minY) / (maxY - minY || 1))) * innerH;
+
+      const path = points
+        .map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(p.time_s).toFixed(2)} ${y(p.bean_temp_f).toFixed(2)}`)
+        .join(' ');
+
+      const yTicks = [];
+      for (let v = minY; v <= maxY; v += 50) yTicks.push(v);
+
+      const xTicks = [];
+      const xStep = maxX <= 480 ? 60 : 120;
+      for (let v = 0; v <= maxX; v += xStep) xTicks.push(v);
+      if (xTicks[xTicks.length - 1] !== maxX) xTicks.push(maxX);
+
+      return `
+        <div class="chart-wrap">
+          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Roast curve">
+            ${yTicks.map(tick => `
+              <line class="grid" x1="${pad.left}" y1="${y(tick)}" x2="${width - pad.right}" y2="${y(tick)}"></line>
+              <text class="axis-text" x="${pad.left - 8}" y="${y(tick) + 4}" text-anchor="end">${tick}</text>
+            `).join('')}
+            ${xTicks.map(tick => `
+              <line class="grid" x1="${x(tick)}" y1="${pad.top}" x2="${x(tick)}" y2="${height - pad.bottom}"></line>
+              <text class="axis-text" x="${x(tick)}" y="${height - 10}" text-anchor="middle">${Math.round(tick / 60)}m</text>
+            `).join('')}
+            <line class="axis" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
+            <line class="axis" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}"></line>
+            ${firstCrackS ? `
+              <line class="marker" x1="${x(firstCrackS)}" y1="${pad.top}" x2="${x(firstCrackS)}" y2="${height - pad.bottom}"></line>
+              <text class="axis-text" x="${x(firstCrackS) + 6}" y="${pad.top + 12}">First crack</text>
+            ` : ''}
+            <path class="curve" d="${path}"></path>
+            <text class="axis-text" x="${width / 2}" y="${height - 2}" text-anchor="middle">Time</text>
+            <text class="axis-text" x="14" y="${height / 2}" text-anchor="middle" transform="rotate(-90 14 ${height / 2})">Bean temp (F)</text>
+          </svg>
+          <div class="chart-note">Bean temperature over roast duration.</div>
+        </div>
+      `;
+    }
+
+    function renderRecord(record) {
+      resultEl.innerHTML = `
+        <article class="record">
+          <div class="record-header">
+            <div>
+              <h2 class="record-id">${record.roast_id}</h2>
+              <div class="meta">Roast record</div>
+            </div>
+            <div class="meta">Roasted ${formatDate(record.date)}</div>
+          </div>
+
+          <div class="record-grid">
+            <section class="section">
+              <h3 class="section-title">Origin</h3>
+              ${renderRows([
+                { label: 'Coffee', value: record.bean.name },
+                { label: 'Country', value: record.bean.origin },
+                { label: 'Region', value: record.bean.region },
+                { label: 'Process', value: record.bean.process },
+                { label: 'Variety', value: record.bean.variety.join(', ') },
+                { label: 'Elevation', value: `${record.bean.elevation_m} m` }
+              ])}
+            </section>
+
+            <section class="section">
+              <h3 class="section-title">Batch</h3>
+              ${renderRows([
+                { label: 'Green weight', value: `${record.batch.green_weight_g} g` },
+                { label: 'Roasted weight', value: `${record.batch.roasted_weight_g} g` },
+                { label: 'Weight loss', value: `${record.batch.weight_loss_pct} %` },
+                { label: 'Roast level', value: record.notes.roast_level }
+              ])}
+            </section>
+
+            <section class="section">
+              <h3 class="section-title">Profile</h3>
+              ${renderRows([
+                { label: 'Charge temp', value: `${record.profile.charge_temp_f} F` },
+                { label: 'Drop temp', value: `${record.profile.drop_temp_f} F` },
+                { label: 'Total time', value: secondsToMinSec(record.profile.total_time_s) },
+                { label: 'First crack', value: secondsToMinSec(record.profile.first_crack_s) },
+                { label: 'Development', value: secondsToMinSec(record.profile.development_time_s) }
+              ])}
+            </section>
+
+            <section class="section">
+              <h3 class="section-title">Cup</h3>
+              ${renderRows([
+                { label: 'Notes', value: record.notes.cupping.join(', ') },
+                { label: 'Comment', value: record.notes.comments }
+              ])}
+            </section>
+
+            <section class="section full">
+              <h3 class="chart-title">Roast Curve</h3>
+              ${renderChart(record.measurements, record.profile.first_crack_s, record.profile.total_time_s)}
+            </section>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderError(batch) {
+      resultEl.innerHTML = `<div class="error-state" style="margin-top:18px;">No record for ${batch}</div>`;
+    }
+
+    function clearResult() {
+      resultEl.innerHTML = '';
+    }
+
+    function setLastViewed(batch) {
+      localStorage.setItem(LAST_KEY, batch);
+      renderLastViewed();
+    }
+
+    function renderLastViewed() {
+      const last = localStorage.getItem(LAST_KEY);
+      if (!last) {
+        lastViewedEl.innerHTML = '';
+        return;
+      }
+      lastViewedEl.innerHTML = `Last viewed: <span id="last-viewed-link" class="last-link">${last}</span>`;
+      const link = document.getElementById('last-viewed-link');
+      if (link) {
+        link.addEventListener('click', async () => {
+          input.value = last;
+          try {
+            const record = await fetchBatch(last);
+            renderRecord(record);
+          } catch (err) {
+            renderError(last);
+          }
+        });
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const batch = normalizeBatch(input.value);
+      if (!batch) {
+        clearResult();
+        return;
+      }
+
+      try {
+        const record = await fetchBatch(batch);
+        renderRecord(record);
+        setLastViewed(batch);
+      } catch (err) {
+        console.error(err);
+        renderError(batch);
+      }
+    });
+
+    input.addEventListener('input', () => {
+      input.value = normalizeBatch(input.value);
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const presetBatch = normalizeBatch(params.get('batch') || '');
+
+    renderLastViewed();
+
+    if (presetBatch) {
+      input.value = presetBatch;
+      fetchBatch(presetBatch)
+        .then((record) => {
+          renderRecord(record);
+          setLastViewed(presetBatch);
+        })
+        .catch((err) => {
+          console.error(err);
+          renderError(presetBatch);
+        });
+    }
+  </script>
+</body>
+</html>

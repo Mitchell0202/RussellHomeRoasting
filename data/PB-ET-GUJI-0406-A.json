@@ -1,0 +1,43 @@
+{
+  "roast_id": "PB-ET-GUJI-0406-A",
+  "date": "2026-04-06",
+  "bean": {
+    "name": "Ethiopia Guji",
+    "origin": "Ethiopia",
+    "region": "Guji",
+    "process": "Washed",
+    "variety": ["Heirloom"],
+    "elevation_m": 2100
+  },
+  "batch": {
+    "green_weight_g": 1000,
+    "roasted_weight_g": 845,
+    "weight_loss_pct": 15.5
+  },
+  "profile": {
+    "charge_temp_f": 420,
+    "drop_temp_f": 475,
+    "total_time_s": 720,
+    "first_crack_s": 510,
+    "development_time_s": 210
+  },
+  "notes": {
+    "roast_level": "City+",
+    "cupping": ["Blueberry", "Cocoa", "Floral"],
+    "comments": "Clean cup, bright fruit, light cocoa finish."
+  },
+  "measurements": [
+    { "time_s": 0, "bean_temp_f": 76 },
+    { "time_s": 60, "bean_temp_f": 215 },
+    { "time_s": 120, "bean_temp_f": 287 },
+    { "time_s": 180, "bean_temp_f": 332 },
+    { "time_s": 240, "bean_temp_f": 362 },
+    { "time_s": 300, "bean_temp_f": 387 },
+    { "time_s": 360, "bean_temp_f": 407 },
+    { "time_s": 420, "bean_temp_f": 428 },
+    { "time_s": 480, "bean_temp_f": 446 },
+    { "time_s": 540, "bean_temp_f": 462 },
+    { "time_s": 600, "bean_temp_f": 470 },
+    { "time_s": 720, "bean_temp_f": 475 }
+  ]
+}
