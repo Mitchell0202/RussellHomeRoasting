@@ -125,6 +125,35 @@ header::after {
   border-right: 1px solid var(--line);
 }
 
+/* ── HERO (home page) ── */
+.hero {
+  padding: 56px 28px 56px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero h2 {
+  font-size: clamp(2.6rem, 9vw, 5.5rem);
+  font-weight: 600;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  margin-bottom: 32px;
+}
+
+.hero h2 em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.hero p {
+  font-size: 0.93rem;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 340px;
+}
+
 /* ── SIDE NAV ── */
 .side-nav {
   display: flex;
@@ -576,7 +605,8 @@ svg { width: 100%; height: auto; display: block; }
 
   .body-grid { grid-template-columns: 1fr; }
 
-  .main-panel {
+  .main-panel,
+  .hero {
     border-right: none;
     padding: 32px 22px 48px;
   }
