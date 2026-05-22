@@ -29,10 +29,10 @@
         <div class="main-panel">
 
           <section class="lookup" aria-labelledby="lookup-title">
-            <div class="lookup-label" id="lookup-title">Enter Batch No.</div>
-            <div class="lookup-help">Scan once, search any roast. Enter the batch number printed on the bag.</div>
+            <div class="lookup-label" id="lookup-title">Enter Batch Number</div>
+            <div class="lookup-help">Enter the batch number printed on the bag.</div>
             <form id="lookup-form" class="lookup-row" autocomplete="off">
-              <input id="batch-input" name="batch" type="text" placeholder="e.g. GA12659" aria-label="Batch number" />
+              <input id="batch-input" name="batch" type="text" placeholder="e.g. GA426519" aria-label="Batch number" />
               <button type="submit">View Record</button>
             </form>
           </section>
@@ -42,14 +42,13 @@
         </div>
 
         <nav class="side-nav" aria-label="Main navigation">
-          <a href="index.html">Home</a>
           <a href="journal.html">Journal</a>
           <a href="origins.html">Origins</a>
-          <a href="batch.html" class="active">Batches</a>
+          <a href="batch-lookup.html" class="active">Batches</a>
           <a href="https://forms.gle/ZgAe8ggtJFaLG8N4A">Order</a>
           <a href="about.html">About</a>
+          <a href="index.html">Home</a>
         </nav>
-
 
       </div>
 
@@ -76,50 +75,95 @@
       return value.trim().toUpperCase();
     }
 
-    function formatDate(value) {
-      const date = new Date(value + 'T00:00:00');
+    function formatDate(isoDate) {
+      const date = new Date(isoDate + 'T00:00:00');
       return date.toLocaleDateString(undefined, {
         year: 'numeric', month: 'long', day: 'numeric'
       });
     }
 
     function secondsToMinSec(total) {
-      const minutes = Math.floor(total / 60);
-      const seconds = total % 60;
-      return `${minutes}:${String(seconds).padStart(2, '0')}`;
+      const s = Math.round(total);
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     }
 
     function renderRows(rows) {
-      return `
-        <div class="rows">
-          ${rows.map(row => `
-            <div class="row">
-              <div class="row-label">${row.label}</div>
-              <div class="row-value">${row.value}</div>
-            </div>
-          `).join('')}
-        </div>
-      `;
+      return `<div class="rows">${rows.map(r => `
+        <div class="row">
+          <div class="row-label">${r.label}</div>
+          <div class="row-value">${r.value}</div>
+        </div>`).join('')}
+      </div>`;
     }
 
-    function renderChart(points, firstCrackS, totalTimeS) {
-      if (!Array.isArray(points) || !points.length) {
-        return '<div class="empty-state">No roast curve data available.</div>';
+    function renderChart(timex, temp2, timeindex, computed) {
+      const chargeIdx = timeindex[0];
+      const dropIdx   = timeindex[6];
+      const totalTime = computed.totaltime;
+      const dryTime   = computed.DRY_time;
+      const tpTime    = computed.TP_time;
+      const fcsTime   = computed.FCs_time;
+      const fceTime   = computed.FCe_time;
+
+      // Build points relative to charge
+      const chargeT = timex[chargeIdx];
+      const points = [];
+      for (let i = chargeIdx; i <= dropIdx && i < timex.length; i++) {
+        const t  = timex[i] - chargeT;
+        const bt = temp2[i];
+        if (bt != null && bt > 0) points.push({ t, bt });
       }
 
-      const width = 700, height = 280;
-      const pad = { top: 16, right: 18, bottom: 36, left: 42 };
-      const maxX = Math.max(totalTimeS || 0, ...points.map(p => p.time_s), 1);
-      const temps = points.map(p => p.bean_temp_f);
-      const minYData = Math.min(...temps), maxYData = Math.max(...temps);
-      const minY = Math.floor((minYData - 20) / 25) * 25;
-      const maxY = Math.ceil((maxYData + 10) / 25) * 25;
+      if (!points.length) return '<div class="empty-state">No roast curve data available.</div>';
+
+      // Smooth: sliding window average
+      const windowSize = 10;
+      const drawPoints = points.map((p, i) => {
+        const start = Math.max(0, i - Math.floor(windowSize / 2));
+        const end   = Math.min(points.length, start + windowSize);
+        const slice = points.slice(start, end);
+        return { t: p.t, bt: slice.reduce((s, v) => s + v.bt, 0) / slice.length };
+      });
+
+      const width = 700, height = 300;
+      const pad = { top: 28, right: 52, bottom: 36, left: 42 };
+      const maxX = totalTime;
+      const bts  = drawPoints.map(p => p.bt);
+      const minY = Math.floor((Math.min(...bts) - 20) / 25) * 25;
+      const maxY = Math.ceil((Math.max(...bts) + 10) / 25) * 25;
       const innerW = width - pad.left - pad.right;
       const innerH = height - pad.top - pad.bottom;
-      const x = t => pad.left + (t / maxX) * innerW;
-      const y = temp => pad.top + (1 - ((temp - minY) / (maxY - minY || 1))) * innerH;
+      const x = t    => pad.left + (t / maxX) * innerW;
+      const y = temp => pad.top  + (1 - ((temp - minY) / (maxY - minY || 1))) * innerH;
+      const bot = pad.top + innerH;
 
-      const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(p.time_s).toFixed(2)} ${y(p.bean_temp_f).toFixed(2)}`).join(' ');
+      // Compute RoR (°F/min) from smoothed BT, then smooth the RoR itself
+      const rorRaw = drawPoints.map((p, i) => {
+        if (i === 0) return { t: p.t, ror: 0 };
+        const prev = drawPoints[i - 1];
+        const dt = (p.t - prev.t) / 60; // convert seconds to minutes
+        return { t: p.t, ror: dt > 0 ? (p.bt - prev.bt) / dt : 0 };
+      });
+      const rorWindowSize = 400;
+      const rorPoints = rorRaw.map((p, i) => {
+        const start = Math.max(0, i - Math.floor(rorWindowSize / 2));
+        const end   = Math.min(rorRaw.length, start + rorWindowSize);
+        const slice = rorRaw.slice(start, end);
+        return { t: p.t, ror: slice.reduce((s, v) => s + v.ror, 0) / slice.length };
+      });
+
+      // RoR axis: 0 to ~25 °F/min, right side
+      const rorMax = 25;
+      const rorMin = 0;
+      const yRor = ror => pad.top + (1 - ((ror - rorMin) / (rorMax - rorMin))) * innerH;
+      const rorPath = rorPoints.map((p, i) =>
+        `${i === 0 ? 'M' : 'L'} ${x(p.t).toFixed(2)} ${yRor(Math.max(rorMin, Math.min(rorMax, p.ror))).toFixed(2)}`
+      ).join(' ');
+      const rorTicks = [0, 5, 10, 15, 20, 25];
+
+      const path = drawPoints.map((p, i) =>
+        `${i === 0 ? 'M' : 'L'} ${x(p.t).toFixed(2)} ${y(p.bt).toFixed(2)}`
+      ).join(' ');
 
       const yTicks = [];
       for (let v = minY; v <= maxY; v += 50) yTicks.push(v);
@@ -128,92 +172,185 @@
       for (let v = 0; v <= maxX; v += xStep) xTicks.push(v);
       if (xTicks[xTicks.length - 1] !== maxX) xTicks.push(maxX);
 
+      // Phase shading: Drying (0→dry), Maillard (dry→FCs), Development (FCs→drop)
+      // Colours are translucent fills using CSS-friendly rgba strings
+      const phases = [
+        { start: 0,       end: dryTime, color: 'rgba(180,160,120,0.08)', label: 'Drying',      labelPos: 'start' },
+        { start: dryTime, end: fcsTime, color: 'rgba(140,100, 60,0.08)', label: 'Maillard',    labelPos: 'start' },
+        { start: fcsTime, end: totalTime,color:'rgba( 80, 50, 20,0.10)', label: 'Development', labelPos: 'start' },
+      ].filter(p => p.start != null && p.end != null && p.end > p.start);
+
+      // Vertical marker lines
+      const vLines = [
+        { t: 0,         label: 'Charge',          dash: 'none', offset: 6   },
+        { t: tpTime,    label: 'TP',   dash: '3 3',  offset: 6   },
+        { t: dryTime,   label: 'DE',         dash: '4 3',  offset: 6   },
+        { t: fcsTime,   label: 'FC',     dash: '5 4',  offset: 6   },
+        { t: fceTime,   label: 'FCe', dash: '3 4',  offset: 6   },
+        { t: totalTime, label: 'Drop',            dash: 'none', offset: -32 },
+      ].filter(m => m.t != null && m.t >= 0);
+
       return `
         <div class="chart-wrap">
           <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Roast curve">
+
+            <!-- Phase shading (drawn first, behind everything) -->
+            ${phases.map(p => `
+              <rect
+                x="${x(p.start).toFixed(2)}"
+                y="${pad.top}"
+                width="${(x(p.end) - x(p.start)).toFixed(2)}"
+                height="${innerH}"
+                fill="${p.color}"
+              />
+              <text
+                class="axis-text"
+                x="${((x(p.start) + x(p.end)) / 2).toFixed(2)}"
+                y="${pad.top - 6}"
+                text-anchor="middle"
+                style="font-size:9px;fill:#7a7670;letter-spacing:0.1em;text-transform:uppercase;"
+              >${p.label}</text>
+            `).join('')}
+
+            <!-- Y grid lines -->
             ${yTicks.map(tick => `
               <line class="grid" x1="${pad.left}" y1="${y(tick)}" x2="${width - pad.right}" y2="${y(tick)}"></line>
               <text class="axis-text" x="${pad.left - 8}" y="${y(tick) + 4}" text-anchor="end">${tick}</text>
             `).join('')}
+
+            <!-- X grid lines + time labels -->
             ${xTicks.map(tick => `
-              <line class="grid" x1="${x(tick)}" y1="${pad.top}" x2="${x(tick)}" y2="${height - pad.bottom}"></line>
+              <line class="grid" x1="${x(tick)}" y1="${pad.top}" x2="${x(tick)}" y2="${bot}"></line>
               <text class="axis-text" x="${x(tick)}" y="${height - 10}" text-anchor="middle">${Math.round(tick / 60)}m</text>
             `).join('')}
-            <line class="axis" x1="${pad.left}" y1="${height - pad.bottom}" x2="${width - pad.right}" y2="${height - pad.bottom}"></line>
-            <line class="axis" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${height - pad.bottom}"></line>
-            ${firstCrackS ? `
-              <line class="marker" x1="${x(firstCrackS)}" y1="${pad.top}" x2="${x(firstCrackS)}" y2="${height - pad.bottom}"></line>
-              <text class="axis-text" x="${x(firstCrackS) + 6}" y="${pad.top + 12}">First crack</text>
-            ` : ''}
+
+            <!-- Axes -->
+            <line class="axis" x1="${pad.left}" y1="${bot}" x2="${width - pad.right}" y2="${bot}"></line>
+            <line class="axis" x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${bot}"></line>
+            <line class="axis" x1="${width - pad.right}" y1="${pad.top}" x2="${width - pad.right}" y2="${bot}"></line>
+
+            <!-- RoR right axis ticks -->
+            ${rorTicks.map(tick => `
+              <text class="axis-text" x="${width - pad.right + 6}" y="${yRor(tick) + 4}" text-anchor="start" style="fill:#b0a090;">${tick}</text>
+            `).join('')}
+            <text class="axis-text" x="${width - 10}" y="${height / 2}" text-anchor="middle" transform="rotate(90 ${width - 10} ${height / 2})" style="fill:#b0a090;">Rate of Rise (°F/min)</text>
+
+            <!-- Phase vertical markers -->
+            ${vLines.map(m => `
+              <line
+                stroke="var(--muted)"
+                stroke-width="1"
+                stroke-dasharray="${m.dash === 'none' ? '' : m.dash}"
+                fill="none"
+                x1="${x(m.t).toFixed(2)}" y1="${pad.top}"
+                x2="${x(m.t).toFixed(2)}" y2="${bot}"
+              />
+              <text
+                class="axis-text"
+                x="${(x(m.t) + m.offset).toFixed(2)}"
+                y="${(pad.top + 20).toFixed(2)}"
+                style="font-size:9px;fill:#7a7670;"
+              >${m.label}</text>
+            `).join('')}
+
+            <!-- Rate of Rise curve -->
+            <path
+              d="${rorPath}"
+              fill="none"
+              stroke="#c4a882"
+              stroke-width="1.5"
+              stroke-dasharray="6 3"
+            />
+
+            <!-- Bean temp curve -->
             <path class="curve" d="${path}"></path>
+
+            <!-- Axis labels -->
             <text class="axis-text" x="${width / 2}" y="${height - 2}" text-anchor="middle">Time</text>
-            <text class="axis-text" x="14" y="${height / 2}" text-anchor="middle" transform="rotate(-90 14 ${height / 2})">Bean temp (F)</text>
+            <text class="axis-text" x="14" y="${height / 2}" text-anchor="middle" transform="rotate(-90 14 ${height / 2})">Bean temp (°F)</text>
+
           </svg>
-          <div class="chart-note">Bean temperature over roast duration.</div>
-        </div>
-      `;
+
+          <!-- Chart legend -->
+          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-family:Arial,Helvetica,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);">
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:2px solid var(--fg);"></span> Bean temperature</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:2px dashed #c4a882;"></span> Rate of rise</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px solid var(--muted);"></span> Charge</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> Turning Point</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> Dry End</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> First Crack</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> First Crack End</span>
+            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px solid var(--muted);"></span> Drop</span>
+          </div>
+          <div class="chart-note" style="margin-top:6px;">Bean temperature over roast duration. Shaded regions show roast phases.</div>
+        </div>`;
     }
 
-    function renderRecord(record) {
+    function renderRecord(r, batchId) {
+      const c = r.computed;
+      const weightLoss = c.weight_loss != null ? c.weight_loss.toFixed(1) : '—';
+      const devTime = (c.totaltime && c.FCs_time)
+        ? secondsToMinSec(c.totaltime - c.FCs_time)
+        : '—';
+
       resultEl.innerHTML = `
         <article class="record">
           <div class="record-header">
             <div>
-              <div class="record-id">${record.roast_id}</div>
+              <div class="record-id">${batchId}</div>
               <div class="record-date">Roast record</div>
             </div>
-            <div class="record-date">Roasted ${formatDate(record.date)}</div>
+            <div class="record-date">Roasted ${formatDate(r.roastisodate)}</div>
           </div>
 
           <div class="record-grid">
+
             <section>
-              <div class="section-title">Origin</div>
+              <div class="section-title">Bean</div>
               ${renderRows([
-                { label: 'Coffee', value: record.bean.name },
-                { label: 'Country', value: record.bean.origin },
-                { label: 'Region', value: record.bean.region },
-                { label: 'Process', value: record.bean.process },
-                { label: 'Variety', value: record.bean.variety.join(', ') },
-                { label: 'Elevation', value: `${record.bean.elevation_m} m` }
+                { label: 'Name',   value: r.beans || '—' },
+                { label: 'Title',  value: r.title || '—' },
               ])}
             </section>
 
             <section>
               <div class="section-title">Batch</div>
               ${renderRows([
-                { label: 'Green weight', value: `${record.batch.green_weight_g} g` },
-                { label: 'Roasted weight', value: `${record.batch.roasted_weight_g} g` },
-                { label: 'Weight loss', value: `${record.batch.weight_loss_pct} %` },
-                { label: 'Roast level', value: record.notes.roast_level }
+                { label: 'Green weight',   value: r.weight[0] ? `${r.weight[0]} ${r.weight[2]}` : '—' },
+                { label: 'Roasted weight', value: r.weight[1] ? `${r.weight[1]} ${r.weight[2]}` : '—' },
+                { label: 'Weight loss',    value: `${weightLoss} %` },
               ])}
             </section>
 
             <section>
               <div class="section-title">Profile</div>
               ${renderRows([
-                { label: 'Charge temp', value: `${record.profile.charge_temp_f} F` },
-                { label: 'Drop temp', value: `${record.profile.drop_temp_f} F` },
-                { label: 'Total time', value: secondsToMinSec(record.profile.total_time_s) },
-                { label: 'First crack', value: secondsToMinSec(record.profile.first_crack_s) },
-                { label: 'Development', value: secondsToMinSec(record.profile.development_time_s) }
+                { label: 'Charge temperature', value: c.CHARGE_BT   != null ? `${c.CHARGE_BT.toFixed(1)} °F`  : '—' },
+                { label: 'Drop temperature',   value: c.DROP_BT     != null ? `${c.DROP_BT.toFixed(1)} °F`    : '—' },
+                { label: 'Total time',         value: c.totaltime   != null ? secondsToMinSec(c.totaltime)    : '—' },
+                { label: 'Dry end',            value: c.DRY_time    != null ? secondsToMinSec(c.DRY_time)     : '—' },
+                { label: 'First crack',        value: c.FCs_time    != null ? secondsToMinSec(c.FCs_time)     : '—' },
+                { label: 'Development',        value: devTime },
               ])}
             </section>
 
             <section>
-              <div class="section-title">Cup</div>
+              <div class="section-title">Rate of Rise</div>
               ${renderRows([
-                { label: 'Notes', value: record.notes.cupping.join(', ') },
-                { label: 'Comment', value: record.notes.comments }
+                { label: 'Drying phase',      value: c.dry_phase_ror    != null ? `${c.dry_phase_ror.toFixed(1)} °F/min`    : '—' },
+                { label: 'Maillard phase',    value: c.mid_phase_ror    != null ? `${c.mid_phase_ror.toFixed(1)} °F/min`    : '—' },
+                { label: 'Development phase', value: c.finish_phase_ror != null ? `${c.finish_phase_ror.toFixed(1)} °F/min` : '—' },
+                { label: 'Area under curve',  value: c.AUC              != null ? c.AUC                                     : '—' },
               ])}
             </section>
 
             <section class="full">
               <div class="section-title">Roast Curve</div>
-              ${renderChart(record.measurements, record.profile.first_crack_s, record.profile.total_time_s)}
+              ${renderChart(r.timex, r.temp2, r.timeindex, c)}
             </section>
+
           </div>
-        </article>
-      `;
+        </article>`;
     }
 
     function renderEmpty() {
@@ -224,9 +361,18 @@
       resultEl.innerHTML = `
         <div class="error-state">
           No record found for <strong>${batch}</strong>.
-          <div class="error-hint">Try one of the sample batches: PB-ET-GUJI-0406-A or PB-CO-HUILA-0408-A.</div>
-        </div>
-      `;
+          <div class="error-hint">Check the batch number on the bag and try again.</div>
+        </div>`;
+    }
+
+    function saveBatchCookie(batch) {
+      const expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toUTCString();
+      document.cookie = `lastBatch=${encodeURIComponent(batch)};expires=${expires};path=/`;
+    }
+
+    function loadBatchCookie() {
+      const match = document.cookie.match(/(?:^|;\s*)lastBatch=([^;]*)/);
+      return match ? decodeURIComponent(match[1]) : null;
     }
 
     form.addEventListener('submit', async event => {
@@ -235,7 +381,8 @@
       if (!batch) { renderEmpty(); return; }
       try {
         const record = await fetchBatch(batch);
-        renderRecord(record);
+        saveBatchCookie(batch);
+        renderRecord(record, batch);
       } catch (err) {
         renderError(batch);
       }
@@ -243,10 +390,12 @@
 
     const params = new URLSearchParams(window.location.search);
     const presetBatch = normalizeBatch(params.get('batch') || '');
+    const cookieBatch = loadBatchCookie();
+    const initialBatch = presetBatch || cookieBatch || '';
 
-    if (presetBatch) {
-      input.value = presetBatch;
-      fetchBatch(presetBatch).then(renderRecord).catch(() => renderError(presetBatch));
+    if (initialBatch) {
+      input.value = initialBatch;
+      fetchBatch(initialBatch).then(r => renderRecord(r, initialBatch)).catch(() => renderError(initialBatch));
     } else {
       renderEmpty();
     }

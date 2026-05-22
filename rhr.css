@@ -2,6 +2,10 @@
    Russell Home Roasting — Shared Stylesheet
    rhr.css
    ════════════════════════════════════════════════ */
+/* Google Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Special+Elite&display=swap');
+
+
 
 /* ── TOKENS ── */
 :root {
@@ -22,7 +26,11 @@ html, body {
 }
 
 body {
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: "Inter", Georgia, "Times New Roman", Times, serif;
+}
+
+h1, h2 {
+  font-family: "Playfair Display", Georgia, "Times New Roman", Times, serif;
 }
 
 /* ── PAGE ENTRANCE ── */
@@ -32,7 +40,7 @@ body {
   min-height: 100vh;
   opacity: 0;
   transform: translateY(40px);
-  animation: rise 0.4s ease-out forwards;
+  animation: rise .7s ease-out forwards;
 }
 
 @keyframes rise {
@@ -55,7 +63,7 @@ body {
 }
 
 .rail-dot {
-  width: 7px; height: 7px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--fg);
 }
@@ -81,7 +89,7 @@ body {
 /* ── HEADER ── */
 header {
   padding: 32px 28px 24px;
-  border-bottom: 3px solid var(--line);
+  border-bottom: 5px solid var(--line);
   position: relative;
   margin-bottom: 5px;
 }
@@ -89,15 +97,16 @@ header {
 header::after {
   content: '';
   position: absolute;
-  bottom: -5px;
+  bottom: -10px;
   left: 0; right: 0;
-  height: 1px;
+  height: 3px;
   background: var(--line);
 }
 
 .brand {
-  font-size: clamp(1.3rem, 4vw, 2rem);
-  font-weight: 600;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.5rem, 4vw, 3rem);
+  font-weight: 700;
   line-height: 1.1;
   letter-spacing: 0.01em;
 }
@@ -115,7 +124,7 @@ header::after {
 /* ── BODY GRID ── */
 .body-grid {
   display: grid;
-  grid-template-columns: 1fr 140px;
+  grid-template-columns: 1fr 100px;
   border-bottom: 1px solid var(--soft);
 }
 
@@ -135,6 +144,7 @@ header::after {
 }
 
 .hero h2 {
+  font-family: "Playfair Display", Georgia, serif;
   font-size: clamp(2.6rem, 9vw, 5.5rem);
   font-weight: 600;
   line-height: 1.0;
@@ -143,6 +153,7 @@ header::after {
 }
 
 .hero h2 em {
+  font-family: "Playfair Display", Georgia, serif;
   font-style: italic;
   font-weight: 400;
 }
@@ -169,6 +180,7 @@ header::after {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   transform: rotate(180deg);
+  font-weight: 400;
   font-size: 0.8rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -253,6 +265,7 @@ footer {
 }
 
 .card-country {
+  font-family: "Special Elite", Georgia, serif;
   font-size: clamp(1.5rem, 4vw, 2.2rem);
   font-weight: 600;
   line-height: 1.0;

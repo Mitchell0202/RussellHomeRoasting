@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Russell Home Roasting — Journal</title>
+  <link rel="stylesheet" href="../rhr.css" />
+  <style>
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .article-title {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 36px;
+      max-width: 560px;
+    }
+
+    .article-title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .article-body {
+      max-width: 560px;
+    }
+
+    .article-body p {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--fg);
+      font-family: Georgia, "Times New Roman", Times, serif;
+      margin-bottom: 1.5em;
+    }
+
+    .article-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 40px;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .back-link:hover {
+      color: var(--fg);
+      border-bottom-color: var(--fg);
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="rail" aria-hidden="true">
+    <div class="rail-dot"></div>
+    <div class="rail-text"> · Estd 2026 · </div>
+    <div class="rail-dot"></div>
+  </aside>
+
+  <main class="page">
+    <div class="content">
+
+      <header>
+        <h1 class="brand">
+          Russell Home Roasting
+          <span>Journal</span>
+        </h1>
+      </header>
+
+      <div class="body-grid">
+
+        <div class="main-panel">
+
+          <a href="../journal.html" class="back-link">← Journal</a>
+
+          <div class="article-meta">
+            <div class="journal-card-date">May 14, 2026</div>
+            <div class="journal-card-tags">
+              <span class="journal-tag">Tag 1</span>
+              <span class="journal-tag">Tag 2</span>
+            </div>
+          </div>
+
+          <h2 class="article-title">Sample Title</h2>
+
+          <div class="article-body">
+
+            <p>Write your first paragraph here. This is where your article begins — set the scene, introduce the topic, or just start with whatever's on your mind about this roast.</p>
+
+            <p>Add as many paragraphs as you need. Just copy a &lt;p&gt; tag and fill it in. The spacing and line height are already set to be easy to read.</p>
+
+            <p>Keep going here. There's no limit to how many paragraphs you add — the layout will just grow naturally downward.</p>
+
+          </div>
+
+        </div>
+
+        <nav class="side-nav" aria-label="Main navigation">
+          <a href="../index.html">Home</a>
+          <a href="../journal.html" class="active">Journal</a>
+          <a href="../origins.html">Origins</a>
+          <a href="../batch-lookup.html">Batches</a>
+          <a href="https://forms.gle/ZgAe8ggtJFaLG8N4A">Order</a>
+          <a href="../about.html">About</a>
+        </nav>
+
+      </div>
+
+      <footer>
+        <span>Russell Home Roasting · Appleton, WI</span>
+        <span>built by hand, like the coffee</span>
+      </footer>
+
+    </div>
+  </main>
+
+</body>
+</html>
