@@ -89,7 +89,7 @@ h1, h2 {
 /* ── HEADER ── */
 header {
   padding: 32px 28px 24px;
-  border-bottom: 5px solid var(--line);
+  border-bottom: 3px solid var(--line);
   position: relative;
   margin-bottom: 5px;
 }
@@ -97,9 +97,9 @@ header {
 header::after {
   content: '';
   position: absolute;
-  bottom: -10px;
+  bottom: -7px;
   left: 0; right: 0;
-  height: 3px;
+  height: 1px;
   background: var(--line);
 }
 
