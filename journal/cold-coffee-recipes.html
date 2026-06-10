@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Russell Home Roasting — Journal</title>
+  <link rel="stylesheet" href="../rhr.css" />
+  <style>
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .article-title {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 36px;
+      max-width: 560px;
+    }
+
+    .article-title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .article-body {
+      max-width: 560px;
+    }
+
+    .article-body p {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--fg);
+      font-family: Georgia, "Times New Roman", Times, serif;
+      margin-bottom: 1.5em;
+    }
+
+    .article-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 40px;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .back-link:hover {
+      color: var(--fg);
+      border-bottom-color: var(--fg);
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="rail" aria-hidden="true">
+    <div class="rail-dot"></div>
+    <div class="rail-text"> · Estd 2026 · </div>
+    <div class="rail-dot"></div>
+  </aside>
+
+  <main class="page">
+    <div class="content">
+
+      <header>
+        <h1 class="brand">
+          Russell Home Roasting
+          <span>Journal</span>
+        </h1>
+      </header>
+
+      <div class="body-grid">
+
+        <div class="main-panel">
+
+          <a href="../journal.html" class="back-link">← Journal</a>
+
+          <div class="article-meta">
+            <div class="journal-card-date">May 29, 2026</div>
+            <div class="journal-card-tags">
+              <span class="journal-tag">Recipes</span>
+            </div>
+          </div>
+
+          <h2 class="article-title">Cold Coffee</h2>
+
+          <div class="article-body">
+
+            <p>
+             This past week we've had our first glimpse of the heat of summer. It was also the perfect time to try out some iced coffee recipes.
+             I hope you find some time to try these out yourself!
+            </p>
+
+            <p>If you don't use one already, I recommend using a digital scale when brewing coffee. While it sounds like it would over complicate things,
+            it simplifies measurements and allows for repeatability. A simple $10 kitchen scale with gram measurements works find (or go crazy with bluetooth scales measuring to 0.01g)...</p>
+
+            <h2>Japanese Iced Coffee</h2>
+            <p>Suggestion: Use a higher elevation coffee with some fruit notes, such as an Ethiopian or other light roast.</p>
+            <p>Step 1: Grind 20g of coffee just as you would for a standard pour over (medium-fine)</p>
+            <p>Step 2: Boil water and rinse the filter to avoid paper flavor</p>
+            <p>Step 3: Put 120g of ice in the cup you'll brew into (or chemex)</p>
+            <p>Step 4: Pour 40g of water over grounds and bloom for 30s</p>
+            <p>Step 5: Pour 40g of water again over grounds and wait 30s (second bloom)</p>
+            <p>Step 6: Pour 120g of water over grounds, center pour with small circular motion</p>
+            <p>Swirl the ice and wait a few minutes for the brew to finish cooling. Feel free to adjust the ratios of ice/water. This recipe is the same as a standard pour over, except a portion of the water used to brew has been replaced with ice in the bottom.</p>
+            
+            <h2>Iced Vanilla Latte</h2>
+            <p>I use a moka pot for my cafe style drinks, but use an espresso machine if you have it.</p>
+            <p>Step 1: Prepare your glass by putting in a few drops of vanilla extract and half a tablespoon of maple syrup</p>
+            <p>Step 2: Brew a moka pot, or pull a shot of espresso</p>
+            <p>Step 3: Pour the coffee into the glass and swirl to mix the syrup/vanilla</p>
+            <p>Step 4: Add 4-5 ice cubes, swirl</p>
+            <p>Step 5: Add some cold milk, and a little cream if you have it. I like a 50/50 ratio of coffee to milk, but adjust as you like</p>
+            <p>Try different flavors and change up the ratios. I find that mixing the hot coffee with the syrups in the beginning helps to avoid everything settling to the bottom.</p>
+
+          </div>
+
+        </div>
+
+        <nav class="side-nav" aria-label="Main navigation">
+          <a href="../index.html">Home</a>
+          <a href="../journal.html" class="active">Journal</a>
+          <a href="../origins.html">Origins</a>
+          <a href="../batch-lookup.html">Batches</a>
+          <a href="../order.html">Order</a>
+          <a href="../about.html">About</a>
+        </nav>
+
+      </div>
+
+      <footer>
+        <span>Russell Home Roasting · Appleton, WI</span>
+        <span>built by hand, like the coffee</span>
+      </footer>
+
+    </div>
+  </main>
+
+</body>
+</html>
