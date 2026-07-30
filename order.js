@@ -70,7 +70,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
   function currentPrice() {
     // 6oz is priced at half a 12oz bag; adjust here if pricing
     // logic ever gets more complex.
-    const perBag = bagSize === "6oz" ? basePrice / 2 : basePrice;
+    const perBag = bagSize === "6oz" ? (basePrice / 2) + 1: basePrice;
     return perBag * quantity;
   }
 
