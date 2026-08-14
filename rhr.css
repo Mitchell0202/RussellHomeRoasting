@@ -89,19 +89,10 @@ h1, h2 {
 /* ── HEADER ── */
 header {
   padding: 32px 28px 24px;
-  border-bottom: 3px solid var(--line);
+  border-bottom: 1px solid var(--soft);
   position: relative;
-  margin-bottom: 5px;
 }
 
-header::after {
-  content: '';
-  position: absolute;
-  bottom: -7px;
-  left: 0; right: 0;
-  height: 1px;
-  background: var(--line);
-}
 
 .brand {
   font-family: "Playfair Display", Georgia, serif;
@@ -767,28 +758,34 @@ svg { width: 100%; height: auto; display: block; }
     padding: 32px 22px 48px;
   }
 
-  .side-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    border-top: 1px solid var(--line);
-  }
+.side-nav {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-top: 1px solid var(--line);
+}
 
-  .side-nav a {
-    writing-mode: horizontal-tb;
-    transform: none;
-    flex: none;
-    width: 50%;
-    justify-content: flex-start;
-    padding: 16px 22px;
-    font-size: 0.8rem;
-    border: none;
-    border-bottom: 1px solid var(--soft);
-    border-right: 1px solid var(--soft);
-    margin-bottom: 0;
-    white-space: normal;
-  }
+.side-nav a {
+  writing-mode: horizontal-tb;
+  transform: none;
+  justify-content: center;
+  text-align: center;
+  padding: 16px 22px;
+  font-size: 0.8rem;
+  border: none;
+  border-bottom: 1px solid var(--soft);
+  border-right: 1px solid var(--soft);
+  margin-bottom: 0;
+  white-space: normal;
+}
 
-  .side-nav a:nth-child(even) { border-right: none; }
+.side-nav a:nth-child(even) {
+  border-right: none;
+}
+
+.side-nav a:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  border-right: none;
+}
 
   /* Origins */
   .cards-grid { grid-template-columns: 1fr; }

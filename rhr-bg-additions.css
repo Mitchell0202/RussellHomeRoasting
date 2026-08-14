@@ -1,0 +1,90 @@
+/* ════════════════════════════════════════════════
+   BACKGROUND PHOTO OPTIONS — additions to rhr.css
+   ════════════════════════════════════════════════ */
+
+/* ── OPTION 1: Full-bleed hero photo with scrim ──
+   The hero section itself becomes the photo, dark
+   gradient scrim underneath so the cream text reads
+   clean. Nav + footer stay exactly as they are. */
+
+.hero.bg-photo {
+  position: relative;
+  background-image:
+    linear-gradient(180deg, rgba(14,13,11,0.35) 0%, rgba(14,13,11,0.72) 100%),
+    var(--photo-url);
+  background-size: cover;
+  background-position: center 30%;
+  color: var(--bg);
+  min-height: 420px;
+}
+.hero.bg-photo p { color: #e9e5db; }
+.hero.bg-photo h2 { color: var(--bg); }
+@media (max-width: 560px) {
+  .hero.bg-photo { min-height: 340px; background-position: center 25%; }
+}
+
+/* one line per image */
+.hero.bg-photo-hero1 { --photo-url: url('/images/043.jpg'); }
+.hero.bg-photo-hero2 { --photo-url: url('/images/038.jpg'); }
+
+
+/* ── OPTION 2: Framed image panel ──
+   Text stays on the plain cream background exactly
+   as today. The photo sits in its own bordered box
+   underneath the hero copy — same 1px-line, boxed
+   language already used for journal cards / origin
+   cards, so it feels native to the rest of the site. */
+
+.hero-photo-panel {
+  border: 1px solid var(--line);
+  margin-top: 32px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--soft);
+}
+
+.hero-photo-panel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 560px) {
+  .hero-photo-panel { margin-top: 24px; aspect-ratio: 4 / 3; }
+}
+
+
+/* ── OPTION 3: Subtle full-page backdrop ──
+   The photo sits fixed behind the *entire* page at
+   low opacity, almost like a watermark/texture. All
+   existing content boxes get a solid cream fill so
+   text keeps full contrast; only the negative space
+   (margins, the thin borders) reveals the photo. */
+
+body.bg-backdrop {
+  position: relative;
+}
+
+body.bg-backdrop::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/images/pour_bw.jpg');
+  background-size: cover;
+  background-position: center 35%;
+  opacity: 0.16;
+  z-index: -1;
+}
+
+body.bg-backdrop .rail,
+body.bg-backdrop header,
+body.bg-backdrop .hero,
+body.bg-backdrop .side-nav a,
+body.bg-backdrop footer {
+  background: var(--bg);
+}
+
+body.bg-backdrop .content {
+  background: var(--bg);
+}
