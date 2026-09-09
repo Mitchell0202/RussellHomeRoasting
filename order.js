@@ -32,14 +32,31 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
   let bagSize = "12oz";
   let quantity = 1;
 
+  /* ── Card prices: render the visible tag from data-price so it can
+     never drift out of sync with what the drawer charges ── */
+  if (grid) {
+    grid.querySelectorAll(".origin-card").forEach((card) => {
+      const priceTag = card.querySelector(".card-price");
+      const value = parseFloat(card.dataset.price);
+      if (priceTag && !isNaN(value)) {
+        const display = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
+        priceTag.innerHTML = `$${display}<span class="card-price-unit">/ 12oz</span>`;
+      }
+    });
+  }
+
   /* ── Card selection ── */
+  function clearSelection() {
+    if (selectedCard) selectedCard.classList.remove("selected");
+    selectedCard = null;
+    selectedCoffee = "";
+    basePrice = 0;
+    fab.classList.remove("show");
+  }
+
   function selectCard(card) {
     if (selectedCard === card) {
-      card.classList.remove("selected");
-      selectedCard = null;
-      selectedCoffee = "";
-      basePrice = 0;
-      fab.classList.remove("show");
+      clearSelection();
       closeDrawer();
       return;
     }
@@ -70,7 +87,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
   function currentPrice() {
     // 6oz is priced at half a 12oz bag; adjust here if pricing
     // logic ever gets more complex.
-    const perBag = bagSize === "6oz" ? (basePrice / 2) + 1: basePrice;
+    const perBag = bagSize === "6oz" ? basePrice / 2 : basePrice;
     return perBag * quantity;
   }
 
@@ -272,6 +289,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
         submitBtn.textContent = "Order Now";
         form.reset();
         prefillFromCookies();
+        clearSelection();
 
         setTimeout(closeDrawer, 1800);
       })
