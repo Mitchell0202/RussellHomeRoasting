@@ -7,6 +7,43 @@
   <link rel="stylesheet" href="rhr.css" />
   <link rel="icon" type="image/png" href="images/MokaShaded.png">
   <link rel="stylesheet" href="rhr-bg-additions.css" />
+  <style>
+    .next-roast-box{
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 20px 0 24px;
+      padding: 14px 22px 16px;
+      background: var(--bg, #f7f5f0);
+      border: 1px solid var(--fg, #0e0d0b);
+      outline: 1px solid var(--fg, #0e0d0b);
+      outline-offset: -5px;
+      transform: rotate(-0.6deg);
+    }
+    .next-roast-label{
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.66rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted, #7a7670);
+    }
+    .next-roast-date{
+      font-family: "Special Elite", Georgia, serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.01em;
+      color: var(--fg, #0e0d0b);
+    }
+    .next-roast-countdown{
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-style: italic;
+      font-size: 0.82rem;
+      color: var(--muted, #7a7670);
+    }
+    @media (max-width: 560px){
+      .next-roast-box{ display: flex; }
+    }
+  </style>
 </head>
 <body>
 
@@ -35,6 +72,13 @@
             <p>Every cup starts with a place. Responsibly sourced with maximum traceability in mind. Know what you're drinking and learn where it came from . . .</p>
             <br>
             <p>Roasting happens on either Wednesday or Thursday. All coffee is roasted to order. Currently providing WHOLE BEAN only. Local pickup/delivery within the Fox Valley (no shipping yet).</p>
+
+            <div class="next-roast-box" id="next-roast-box">
+              <span class="next-roast-label">Next roast day</span>
+              <span class="next-roast-date" id="next-roast-date">—</span>
+              <span class="next-roast-countdown" id="next-roast-countdown"></span>
+            </div>
+
             <p>Payment information will be sent once your order is ready for pickup/delivery.</p>
             <br>
             <p>Choose an origin and click order now to place your request.</p>
@@ -439,6 +483,39 @@
   </section>
 
   <script src="order.js"></script>
+
+  <script>
+    (function () {
+      // Swap in your real gist ID once it's created.
+      var GIST_ID = "483d480b06dbd04810597ddb55db492e";
+      var demoDate = "Unknown"; // used only if the gist fetch fails
+
+      function render(dateStr) {
+        var d = new Date(dateStr + "T00:00:00");
+        var dateEl = document.getElementById('next-roast-date');
+        var countdownEl = document.getElementById('next-roast-countdown');
+
+        dateEl.textContent = d.toLocaleDateString(undefined, {
+          weekday: 'long', month: 'long', day: 'numeric'
+        });
+
+        var days = Math.ceil((d - new Date().setHours(0,0,0,0)) / 86400000);
+        countdownEl.textContent =
+          days > 1 ? '(' + days + ' days away)' :
+          days === 1 ? '(tomorrow)' :
+          days === 0 ? '(today)' : '';
+      }
+
+      fetch('https://api.github.com/gists/' + GIST_ID)
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (gist) {
+          var file = gist.files['next-roast.txt'];
+          if (!file) throw new Error();
+          render(file.content.trim());
+        })
+        .catch(function () { render(demoDate); });
+    })();
+  </script>
 
 </body>
 </html>
