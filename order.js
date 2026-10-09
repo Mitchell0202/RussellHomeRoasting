@@ -2,106 +2,208 @@
    Russell Home Roasting — Order Now experience
    order.js
 
-   SETUP: paste your deployed Google Apps Script
-   web app URL below (ends in /exec). See the
-   accompanying Code.gs + setup notes.
+   Every bag is 12 oz. Click a card to add a bag; each bag
+   gets its own roast level in the order drawer.
    ════════════════════════════════════════════════ */
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdegYWHsNbUBK-uTA6sd69qra-_XMGHEQY4faE7Ph5krgxreT49/exec";
 
 (function () {
+  const MAX_BAGS = 20;
+  const ROASTS = ["Light", "Medium", "Medium-Dark", "Dark"];
+  const DEFAULT_ROAST = "Medium";
+
   const grid = document.getElementById("origins-grid");
   const fab = document.getElementById("order-fab");
   const overlay = document.getElementById("order-overlay");
   const drawer = document.getElementById("order-drawer");
-  const drawerTitle = document.getElementById("order-drawer-title");
   const closeBtn = document.getElementById("order-drawer-close");
   const form = document.getElementById("order-form");
   const statusBox = document.getElementById("order-status");
   const phoneField = document.getElementById("phone-field");
   const contactOptions = document.querySelectorAll("#contact-pref-group .toggle-option");
-  const bagOptions = document.querySelectorAll("#bag-size-group .toggle-option");
-  const quantityInput = document.getElementById("quantity");
-  const quantityDecrease = document.getElementById("quantity-decrease");
-  const quantityIncrease = document.getElementById("quantity-increase");
+  const itemsEl = document.getElementById("order-items");
+  const priceValueEl = document.getElementById("order-price-value");
 
-  let selectedCard = null;
-  let selectedCoffee = "";
-  let basePrice = 0; // price per 12oz bag, read from the card's data-price
   let contactPref = "email";
-  let bagSize = "12oz";
-  let quantity = 1;
 
-  /* ── Card prices: render the visible tag from data-price so it can
-     never drift out of sync with what the drawer charges ── */
-  if (grid) {
+  /* Cart: one entry per 12 oz bag, kept grouped by coffee.
+     { coffee: "Ethiopia — Kayon Mountain", price: 15, roast: "Medium" } */
+  let cart = [];
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+  const money = (n) => "$" + n.toFixed(2);
+
+  /* ── Card helpers ── */
+  function cardKey(card) {
+    const country = (card.querySelector(".card-country")?.textContent || "").trim();
+    const city = (card.querySelector(".card-city")?.textContent || "").trim();
+    return city ? `${country} — ${city}` : country;
+  }
+
+  function countFor(key) {
+    return cart.filter((i) => i.coffee === key).length;
+  }
+
+  /* Cards are (re)rendered asynchronously from the gist, so add the
+     quantity control to each card whenever the grid changes. */
+  function decorateCards() {
+    if (!grid) return;
     grid.querySelectorAll(".origin-card").forEach((card) => {
-      const priceTag = card.querySelector(".card-price");
-      const value = parseFloat(card.dataset.price);
-      if (priceTag && !isNaN(value)) {
-        const display = Number.isInteger(value) ? value.toFixed(0) : value.toFixed(2);
-        priceTag.innerHTML = `$${display}<span class="card-price-unit">/ 12oz</span>`;
+      if (!card.querySelector(".card-qty")) {
+        const qty = document.createElement("div");
+        qty.className = "card-qty";
+        qty.innerHTML =
+          '<button type="button" data-qty="-1" aria-label="Remove one bag">−</button>' +
+          '<span class="card-qty-count"></span>' +
+          '<button type="button" data-qty="1" aria-label="Add one bag">+</button>';
+        card.appendChild(qty);
       }
+      syncCard(card);
     });
   }
 
-  /* ── Card selection ── */
-  function clearSelection() {
-    if (selectedCard) selectedCard.classList.remove("selected");
-    selectedCard = null;
-    selectedCoffee = "";
-    basePrice = 0;
-    fab.classList.remove("show");
+  function syncCard(card) {
+    const n = countFor(cardKey(card));
+    card.classList.toggle("selected", n > 0);
+    const label = card.querySelector(".card-qty-count");
+    if (label) label.textContent = n + (n === 1 ? " bag" : " bags");
   }
 
-  function selectCard(card) {
-    if (selectedCard === card) {
-      clearSelection();
-      closeDrawer();
-      return;
+  function syncAllCards() {
+    if (grid) grid.querySelectorAll(".origin-card").forEach(syncCard);
+  }
+
+  /* ── Cart operations ── */
+  function addBag(card) {
+    if (cart.length >= MAX_BAGS) return;
+    const key = cardKey(card);
+    const item = {
+      coffee: key,
+      price: parseFloat(card.dataset.price) || 0,
+      roast: DEFAULT_ROAST
+    };
+    // Insert after the last bag of the same coffee so they stay grouped
+    let idx = -1;
+    cart.forEach((i, n) => { if (i.coffee === key) idx = n; });
+    if (idx === -1) cart.push(item);
+    else cart.splice(idx + 1, 0, item);
+    cartChanged();
+  }
+
+  function removeBagFromCoffee(key) {
+    for (let n = cart.length - 1; n >= 0; n--) {
+      if (cart[n].coffee === key) { cart.splice(n, 1); break; }
     }
-    if (selectedCard) selectedCard.classList.remove("selected");
-    card.classList.add("selected");
-    selectedCard = card;
-
-    const country = (card.querySelector(".card-country")?.textContent || "").trim();
-    const city = (card.querySelector(".card-city")?.textContent || "").trim();
-    selectedCoffee = city ? `${country} — ${city}` : country;
-    basePrice = parseFloat(card.dataset.price) || 0;
-
-    fab.setAttribute("aria-label", `Order ${selectedCoffee}`);
-    fab.title = selectedCoffee;
-    fab.classList.add("show");
+    cartChanged();
   }
 
+  function removeBagAt(index) {
+    cart.splice(index, 1);
+    cartChanged();
+  }
+
+  function cartChanged() {
+    syncAllCards();
+    renderItems();
+    updateFab();
+    if (cart.length === 0) closeDrawer();
+  }
+
+  function total() {
+    return cart.reduce((sum, i) => sum + i.price, 0);
+  }
+
+  /* ── Card clicks ── */
   if (grid) {
     grid.addEventListener("click", function (e) {
       const card = e.target.closest(".origin-card");
       if (!card) return;
-      selectCard(card);
+      const qtyBtn = e.target.closest(".card-qty button");
+      if (qtyBtn) {
+        e.stopPropagation();
+        if (qtyBtn.dataset.qty === "1") addBag(card);
+        else removeBagFromCoffee(cardKey(card));
+        return;
+      }
+      if (e.target.closest(".card-qty")) return;
+      addBag(card);
     });
+
+    new MutationObserver(decorateCards).observe(grid, { childList: true });
+    decorateCards();
   }
 
-  const priceValueEl = document.getElementById("order-price-value");
-
-  function currentPrice() {
-    // 6oz is priced at half a 12oz bag; adjust here if pricing
-    // logic ever gets more complex.
-    const perBag = bagSize === "6oz" ? basePrice / 2 : basePrice;
-    return perBag * quantity;
+  /* ── Floating order bar ── */
+  function updateFab() {
+    const n = cart.length;
+    if (n === 0) {
+      fab.classList.remove("show");
+      return;
+    }
+    fab.textContent = `Order Now · ${n} ${n === 1 ? "bag" : "bags"} · ${money(total())}`;
+    fab.setAttribute("aria-label", `Order ${n} ${n === 1 ? "bag" : "bags"}`);
+    fab.classList.add("show");
   }
 
-  function updatePriceDisplay() {
-    priceValueEl.textContent = "$" + currentPrice().toFixed(2);
+  /* ── Drawer line items ── */
+  const ROAST_LABELS = { "Light": "Light", "Medium": "Medium", "Medium-Dark": "Med-Dark", "Dark": "Dark" };
+
+  function renderItems() {
+    priceValueEl.textContent = money(total());
+    itemsEl.innerHTML = cart.map((item, i) => {
+      const roastButtons = ROASTS.map((r) =>
+        `<button type="button" class="roast-opt${r === item.roast ? " active" : ""}" ` +
+        `data-roast="${r}" aria-pressed="${r === item.roast}">${ROAST_LABELS[r]}</button>`
+      ).join("");
+      return (
+        `<div class="order-item" data-index="${i}">` +
+          `<div class="order-item-head">` +
+            `<div class="order-item-info">` +
+              `<div class="order-item-name">${esc(item.coffee)}</div>` +
+              `<div class="order-item-meta">12 oz · whole bean</div>` +
+            `</div>` +
+            `<span class="order-item-price">${money(item.price)}</span>` +
+            `<button type="button" class="order-item-remove" aria-label="Remove bag ${i + 1}">×</button>` +
+          `</div>` +
+          `<div class="order-item-roast">` +
+            `<div class="order-item-roast-label">Roast level</div>` +
+            `<div class="roast-group" role="group" aria-label="Roast level for bag ${i + 1}">${roastButtons}</div>` +
+          `</div>` +
+        `</div>`
+      );
+    }).join("");
   }
+
+  itemsEl.addEventListener("click", (e) => {
+    const row = e.target.closest(".order-item");
+    if (!row) return;
+    const index = parseInt(row.dataset.index, 10);
+
+    const roastBtn = e.target.closest(".roast-opt");
+    if (roastBtn) {
+      cart[index].roast = roastBtn.dataset.roast;
+      row.querySelectorAll(".roast-opt").forEach((b) => {
+        const on = b === roastBtn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-pressed", on);
+      });
+      return;
+    }
+
+    if (e.target.closest(".order-item-remove")) removeBagAt(index);
+  });
 
   /* ── Drawer open/close ── */
   function openDrawer() {
-    if (!selectedCoffee) return;
-    drawerTitle.textContent = selectedCoffee;
+    if (cart.length === 0) return;
     statusBox.className = "order-status";
     prefillFromCookies();
-    setQuantity(1);
+    renderItems();
     overlay.classList.add("open");
     drawer.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
@@ -125,7 +227,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
     if (e.key === "Escape") closeDrawer();
   });
 
-  /* ── Toggle groups ── */
+  /* ── Contact preference toggle ── */
   contactOptions.forEach((opt) => {
     opt.addEventListener("click", () => {
       contactOptions.forEach((o) => o.classList.remove("active"));
@@ -134,32 +236,6 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
       phoneField.classList.toggle("hidden", contactPref !== "text");
     });
   });
-
-  bagOptions.forEach((opt) => {
-    opt.addEventListener("click", () => {
-      bagOptions.forEach((o) => o.classList.remove("active"));
-      opt.classList.add("active");
-      bagSize = opt.dataset.bagSize;
-      updatePriceDisplay();
-    });
-  });
-
-  function clampQuantity(value) {
-    const n = parseInt(value, 10);
-    if (isNaN(n)) return 1;
-    return Math.min(20, Math.max(1, n));
-  }
-
-  function setQuantity(value) {
-    quantity = clampQuantity(value);
-    quantityInput.value = quantity;
-    updatePriceDisplay();
-  }
-
-  quantityInput.addEventListener("input", () => setQuantity(quantityInput.value));
-  quantityInput.addEventListener("blur", () => setQuantity(quantityInput.value));
-  quantityDecrease.addEventListener("click", () => setQuantity(quantity - 1));
-  quantityIncrease.addEventListener("click", () => setQuantity(quantity + 1));
 
   /* ── Cookies (remember contact info) ── */
   function setCookie(name, value, days) {
@@ -184,12 +260,28 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
 
     if (pref) {
       contactOptions.forEach((o) => {
-        const isMatch = o.dataset.contactPref === pref;
-        o.classList.toggle("active", isMatch);
+        o.classList.toggle("active", o.dataset.contactPref === pref);
       });
       contactPref = pref;
       phoneField.classList.toggle("hidden", contactPref !== "text");
     }
+  }
+
+  /* ── Build the order summary sent to the sheet ──
+     Bags are grouped by coffee + roast, e.g.
+     "2 × Ethiopia — Kayon Mountain (Medium); 1 × Org. Honduras — COMSA (Dark)" */
+  function groupCart() {
+    const groups = [];
+    cart.forEach((item) => {
+      const g = groups.find((x) => x.coffee === item.coffee && x.roast === item.roast);
+      if (g) g.count++;
+      else groups.push({ coffee: item.coffee, roast: item.roast, price: item.price, count: 1 });
+    });
+    return groups;
+  }
+
+  function summarizeCart() {
+    return groupCart().map((g) => `${g.count} × ${g.coffee} (${g.roast})`).join("; ");
   }
 
   /* ── JSONP submission (works around Apps Script's lack of CORS headers) ── */
@@ -233,9 +325,12 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
     const name = form.elements["customerName"].value.trim();
     const email = form.elements["customerEmail"].value.trim();
     const phone = form.elements["customerPhone"].value.trim();
-    const roast = form.elements["roastLevel"].value;
     const notes = form.elements["orderNotes"].value.trim();
 
+    if (cart.length === 0) {
+      showStatus("Add at least one bag before ordering.", "error");
+      return;
+    }
     if (!name || !email) {
       showStatus("Please fill in your name and email.", "error");
       return;
@@ -253,17 +348,20 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
     submitBtn.disabled = true;
     submitBtn.textContent = "Sending…";
 
+    const roasts = Array.from(new Set(cart.map((i) => i.roast)));
+
     const payload = new URLSearchParams({
       timestamp: new Date().toISOString(),
-      coffee: selectedCoffee,
+      coffee: summarizeCart(),
       customerName: name,
       customerEmail: email,
       contactPreference: contactPref,
       customerPhone: phone,
-      roastLevel: roast,
-      bagSize: bagSize,
-      quantity: String(quantity),
-      price: currentPrice().toFixed(2),
+      roastLevel: roasts.length === 1 ? roasts[0] : "Mixed (see coffee)",
+      bagSize: "12oz",
+      quantity: String(cart.length),
+      price: total().toFixed(2),
+      items: JSON.stringify(groupCart()),
       orderNotes: notes
     });
 
@@ -289,9 +387,12 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
         submitBtn.textContent = "Order Now";
         form.reset();
         prefillFromCookies();
-        clearSelection();
 
-        setTimeout(closeDrawer, 1800);
+        // Clear the cart without auto-closing yet, so the success message shows
+        cart = [];
+        syncAllCards();
+        updateFab();
+        setTimeout(() => { closeDrawer(); renderItems(); }, 1800);
       })
       .catch(() => {
         showStatus("Something went wrong sending your order. Please try again.", "error");
@@ -304,4 +405,6 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhDB09P3VYo0R1IPdeg
     statusBox.textContent = message;
     statusBox.className = `order-status show ${type}`;
   }
+
+  updateFab();
 })();

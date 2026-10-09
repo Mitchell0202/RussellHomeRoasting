@@ -40,6 +40,112 @@
       font-size: 0.82rem;
       color: var(--muted, #7a7670);
     }
+    /* ── Multi-bag ordering ── */
+    .card-qty{
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 16px;
+      border: 1px solid var(--fg, #0e0d0b);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .origin-card.selected .card-qty{ display: flex; }
+    .card-qty button{
+      background: var(--bg, #f7f5f0);
+      color: var(--fg, #0e0d0b);
+      border: none;
+      width: 44px; height: 38px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      border-radius: 0;
+    }
+    .card-qty button:hover{ background: var(--fg, #0e0d0b); color: var(--bg, #f7f5f0); }
+    .card-qty-count{
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .order-items{ display: flex; flex-direction: column; gap: 12px; }
+    .order-bags-hint{
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--muted, #7a7670);
+      margin: -2px 0 4px;
+    }
+    .order-item{
+      border: 1px solid var(--fg, #0e0d0b);
+      background: var(--bg, #f7f5f0);
+    }
+    .order-item-head{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--soft, #dedad2);
+    }
+    .order-item-info{ flex: 1; min-width: 0; }
+    .order-item-name{
+      font-family: "Special Elite", Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.25;
+    }
+    .order-item-meta{
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted, #7a7670);
+      margin-top: 3px;
+    }
+    .order-item-price{
+      flex: none;
+      font-family: "Special Elite", Georgia, serif;
+      font-size: 1rem;
+    }
+    .order-item-remove{
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px; height: 30px;
+      padding: 0;
+      line-height: 1;
+      font-size: 1.1rem;
+      border: 1px solid var(--fg, #0e0d0b);
+      background: var(--bg, #f7f5f0);
+      color: var(--fg, #0e0d0b);
+      cursor: pointer;
+      border-radius: 0;
+    }
+    .order-item-remove:hover{ background: var(--fg, #0e0d0b); color: var(--bg, #f7f5f0); }
+    .order-item-roast{ padding: 12px 14px 14px; }
+    .order-item-roast-label{
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted, #7a7670);
+      margin-bottom: 8px;
+    }
+    .roast-group{ display: grid; grid-template-columns: repeat(4, 1fr); }
+    .roast-opt{
+      border: 1px solid var(--fg, #0e0d0b);
+      margin-left: -1px;
+      background: var(--bg, #f7f5f0);
+      color: var(--fg, #0e0d0b);
+      padding: 10px 2px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.66rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 0;
+    }
+    .roast-opt:first-child{ margin-left: 0; }
+    .roast-opt:hover{ background: var(--soft, #dedad2); }
+    .roast-opt.active{ background: var(--fg, #0e0d0b); color: var(--bg, #f7f5f0); }
+    .roast-opt:focus-visible{ outline: 2px solid var(--fg, #0e0d0b); outline-offset: 2px; position: relative; }
     @media (max-width: 560px){
       .next-roast-box{ display: flex; }
     }
@@ -81,7 +187,7 @@
 
             <p>Payment information will be sent once your order is ready for pickup/delivery.</p>
             <br>
-            <p>Choose an origin and click order now to place your request.</p>
+            <p>Click a coffee to add a 12 oz bag (click again for more, or pick several origins), then click Order Now. You'll choose a roast level for each bag.</p>
 
           </div>
 
@@ -140,13 +246,19 @@
   <section id="order-drawer" class="order-drawer" aria-label="Order form" aria-hidden="true">
     <div class="order-drawer-header">
       <div>
-        <div class="order-drawer-title" id="order-drawer-title">Coffee</div>
+        <div class="order-drawer-title" id="order-drawer-title">Your Order</div>
         <div class="order-drawer-sub">Order Now</div>
       </div>
       <button type="button" id="order-drawer-close" class="order-drawer-close" aria-label="Close order form">×</button>
     </div>
 
     <form id="order-form" class="order-form" autocomplete="on">
+
+      <div class="field">
+        <div class="field-label">Your Bags <span class="field-hint">(12 oz, whole bean)</span></div>
+        <div class="order-bags-hint">Choose a roast level for each bag — mix and match if you like.</div>
+        <div class="order-items" id="order-items"></div>
+      </div>
 
       <div class="field">
         <label class="field-label" for="customerName">Name</label>
@@ -171,36 +283,9 @@
         <input type="tel" id="customerPhone" name="customerPhone" autocomplete="tel" />
       </div>
 
-      <div class="field">
-        <label class="field-label" for="roastLevel">Roast Level</label>
-        <select id="roastLevel" name="roastLevel">
-          <option value="Light">Light</option>
-          <option value="Medium" selected>Medium</option>
-          <option value="Medium-Dark">Medium-Dark</option>
-          <option value="Dark">Dark</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Bag Size</div>
-        <div class="toggle-group" id="bag-size-group">
-          <div class="toggle-option active" data-bag-size="12oz">12 oz</div>
-          <div class="toggle-option" data-bag-size="6oz">6 oz</div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="field-label" for="quantity">Number of Bags</label>
-        <div class="quantity-stepper">
-          <button type="button" class="quantity-btn" id="quantity-decrease" aria-label="Decrease quantity">−</button>
-          <input type="number" id="quantity" name="quantity" min="1" max="20" step="1" value="1" inputmode="numeric" />
-          <button type="button" class="quantity-btn" id="quantity-increase" aria-label="Increase quantity">+</button>
-        </div>
-      </div>
-
       <div class="order-price-row">
         <span class="order-price-label">Total</span>
-        <span class="order-price-value" id="order-price-value">$12.00</span>
+        <span class="order-price-value" id="order-price-value">$0.00</span>
       </div>
 
       <div class="field">
