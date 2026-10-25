@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processing Methods - Russell Home Roasting</title>
+  <link rel="stylesheet" href="../rhr.css" />
+  <link rel="icon" type="image/png" href="../images/MokaShaded.png">
+  <style>
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .article-title {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 36px;
+      max-width: 560px;
+    }
+
+    .article-title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .article-body {
+      max-width: 560px;
+    }
+
+    .article-body p {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--fg);
+      font-family: Georgia, "Times New Roman", Times, serif;
+      margin-bottom: 1.5em;
+    }
+
+    .article-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 40px;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .back-link:hover {
+      color: var(--fg);
+      border-bottom-color: var(--fg);
+    }
+	
+	.article-body img {
+		max-width: 100%;
+		height: auto;
+	}
+  </style>
+</head>
+<body>
+
+  <aside class="rail" aria-hidden="true">
+    <div class="rail-dot"></div>
+    <div class="rail-text"> · Estd 2026 · </div>
+    <div class="rail-dot"></div>
+  </aside>
+
+  <main class="page">
+    <div class="content">
+
+      <header>
+        <h1 class="brand">
+          Russell Home Roasting
+          <span>Journal</span>
+        </h1>
+      </header>
+
+      <div class="body-grid">
+
+        <div class="main-panel">
+
+          <a href="../journal.html" class="back-link">← Journal</a>
+
+          <div class="article-meta">
+            <div class="journal-card-date">October 25, 2026</div>
+            <div class="journal-card-tags">
+              <span class="journal-tag">Production</span>
+            </div>
+          </div>
+
+          <h2 class="article-title">Processing Methods Primer</h2>
+
+          <div class="article-body">
+
+            <p>Have you ever thought of where a coffee bean comes from? While it’s often overlooked when thinking about coffee, the coffee bean is the interior seed in a cherry-like fruit. One of the biggest factors in the taste of coffee is how it is processed from cherry to dried bean. The choice by the producer in how to remove the coffee bean from the cherry is a combination of many factors. Climate, technology, knowledge, and market trends can all influence a producer’s choice in how to process the coffee; outside of just desired flavor.</p>
+
+            <p>The types of processing generally falls into two categories:</p>
+				<p><em>Wet-Process</em> (Washed) or <em>Dry-Process</em> (Natural)</p>
+			
+			<img src="../images/DryingWashed.png" alt="A farmer drying washed coffee on a patio">
+			
+            <p>The Wet-Process (Washed) is the most common in specialty coffee. This process involves removing the beans from the cherry-flesh, then soaking the beans to soften the mucilage before it too is removed from the bean. The beans are then dried on patios. What results is a very clean tasting bean that can provide the unique origin-specific flavors.</p>
+			
+			<img src="../images/NaturalCoffee.jpg" alt="A farmer drying washed coffee on a patio">
+			<p>The Dry-Process (Natural) is slightly less common than washed, but is a simpler method requiring less specialized machinery. Freshly picked coffee is dried on raised beds or patios before the bean is removed. The extra time that the fruit is in contact with the bean during drying is what gives these types of coffees a more fruity taste; some even getting a wine or fermented note.</p>
+			
+			<p>Another less common processing method is called the Honey or Pulped-Natural process. This is sort of an in-between processing method that keeps some of the pulp on the bean during drying. Flavors produced from this method include a syrupy sweetness, or balance acidity.</p>
+			
+			<p>While this is not an exhaustive list, and just the beginning of a discussion around processing methods, I hope it can provide a baseline of knowledge when choosing coffees to try. If you prefer clarity, go for a washed coffee. Want to try something exotic, go for a natural. Interested in experiencing something new, try a honey process.</p>
+			
+			<p> &mdash; Mitchell </p>
+          </div>
+
+        </div>
+
+        <nav class="side-nav" aria-label="Main navigation">
+          <a href="journal.html">Journal</a>
+          <a href="coffee.html">Coffee</a>
+          <a href="batch-lookup.html">Batches</a>
+          <a href="about.html">About</a>
+          <a href="index.html">Home</a>
+        </nav>
+
+      </div>
+
+      <footer>
+        <span>Russell Home Roasting · Appleton, WI</span>
+        <span>built by hand, like the coffee</span>
+      </footer>
+
+    </div>
+  </main>
+
+</body>
+</html>
