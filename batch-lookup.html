@@ -5,6 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Russell Home Roasting — Roast Record Lookup</title>
   <link rel="stylesheet" href="rhr.css" />
+  <style>
+    /* ── Hero ── */
+    .hero{
+      border: 1px solid var(--fg, #0e0d0b);
+      outline: 1px solid var(--fg, #0e0d0b);
+      outline-offset: -6px;
+      background: var(--bg, #f7f5f0);
+      padding: 34px 36px 26px;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow{
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 18px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted, #7a7670);
+    }
+    .hero-title{
+      font-family: "Special Elite", Georgia, serif;
+      font-weight: normal;
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      line-height: 1.05;
+      margin: 20px 0 8px;
+      color: var(--fg, #0e0d0b);
+    }
+    .hero-region{
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-style: italic; font-size: 1.2rem;
+      color: var(--fg, #0e0d0b);
+    }
+    .hero-loc{
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: 0.92rem; color: var(--muted, #7a7670); margin-top: 2px;
+    }
+    .hero-chips{ display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; }
+    .hero-chip{
+      border: 1px solid var(--fg, #0e0d0b);
+      padding: 6px 13px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--fg, #0e0d0b);
+    }
+    .hero-stats{
+      display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px;
+      margin-top: 28px; border-top: 1px solid var(--soft, #dedad2);
+    }
+    .hero-stat{ padding: 14px 0; border-bottom: 1px solid var(--soft, #dedad2); }
+    .hero-stat.full{ grid-column: 1 / -1; }
+    .hero-stat-label{
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.64rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted, #7a7670); margin-bottom: 4px;
+    }
+    .hero-stat-value{
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: 1.02rem; color: var(--fg, #0e0d0b);
+    }
+    @media (max-width: 560px){
+      .hero{ padding: 26px 22px 18px; }
+      .hero-stats{ grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
@@ -32,7 +93,7 @@
             <div class="lookup-label" id="lookup-title">Enter Batch Number</div>
             <div class="lookup-help">Enter the batch number printed on the bag.</div>
             <form id="lookup-form" class="lookup-row" autocomplete="off">
-              <input id="batch-input" name="batch" type="text" placeholder="e.g. GA426519" aria-label="Batch number" />
+              <input id="batch-input" name="batch" type="text" placeholder="e.g. EKM426519" aria-label="Batch number" />
               <button type="submit">View Record</button>
             </form>
           </section>
@@ -61,10 +122,97 @@
   </main>
 
   <script>
+    // ---- Coffee details (same Gist as coffee.html) ----
+    const GIST_ID = '483d480b06dbd04810597ddb55db492e';
+    const HIDDEN_FIELDS = ['price', 'prefix'];   // never shown (matched at any nesting level)
+
+    let originsPromise = null;
+    function loadOrigins() {
+      if (!originsPromise) {
+        originsPromise = fetch('https://api.github.com/gists/' + GIST_ID)
+          .then(r => { if (!r.ok) throw new Error('Gist fetch failed'); return r.json(); })
+          .then(gist => JSON.parse(gist.files['origins.json'].content))
+          .catch(() => { originsPromise = null; return null; }); // retry on next lookup
+      }
+      return originsPromise;
+    }
+
+    // Find the coffee whose 3-letter prefix starts the batch number
+    function findCoffee(origins, batch) {
+      if (!Array.isArray(origins)) return null;
+      return origins.find(o => o.prefix && batch.startsWith(String(o.prefix).toUpperCase())) || null;
+    }
+
+    function stripHidden(value) {
+      if (Array.isArray(value)) return value.map(stripHidden);
+      if (value && typeof value === 'object') {
+        return Object.fromEntries(
+          Object.entries(value)
+            .filter(([k]) => !HIDDEN_FIELDS.includes(k.toLowerCase()))
+            .map(([k, v]) => [k, stripHidden(v)])
+        );
+      }
+      return value;
+    }
+
+    // Roast data is required; coffee details are a bonus (record still shows if the Gist is down)
     async function fetchBatch(batch) {
-      const response = await fetch(`data/${batch}.json`);
-      if (!response.ok) throw new Error('Batch not found');
-      return await response.json();
+      const [roastRes, origins] = await Promise.all([
+        fetch(`data/${batch}.json`),
+        loadOrigins()
+      ]);
+      if (!roastRes.ok) throw new Error('Batch not found');
+      const roast = await roastRes.json();
+      const match = findCoffee(origins, batch);
+      return { roast, coffee: match ? stripHidden(match) : null };
+    }
+
+    function esc(value) {
+      return String(value).replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+    }
+
+    const LABEL_OVERRIDES = { flavor: 'Flavor Notes', cultivar: 'Cultivar', subregion: 'Subregion' };
+
+    function prettyLabel(key) {
+      if (LABEL_OVERRIDES[key]) return LABEL_OVERRIDES[key];
+      return key.replace(/[_-]+/g, ' ')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .replace(/^./, c => c.toUpperCase());
+    }
+
+    function flatValue(v) {
+      if (Array.isArray(v)) return v.map(flatValue).join(', ');
+      if (v && typeof v === 'object') {
+        return Object.entries(v).map(([k, x]) => `${prettyLabel(k)}: ${flatValue(x)}`).join('; ');
+      }
+      return esc(v);
+    }
+
+    // Generic renderer: top-level values become a "Coffee" section,
+    // each top-level object (origin, brewing, ...) becomes its own section.
+    function renderCoffee(coffee, exclude = []) {
+      if (!coffee) return '';
+      const entries = Object.entries(coffee).filter(([k, v]) => !exclude.includes(k) && v != null && v !== '');
+      const isGroup = v => v && typeof v === 'object' && !Array.isArray(v);
+
+      const simple = entries.filter(([, v]) => !isGroup(v));
+      const groups = entries.filter(([, v]) => isGroup(v));
+
+      const toRows = list => renderRows(list.map(([k, v]) => ({ label: prettyLabel(k), value: flatValue(v) })));
+
+      let html = '';
+      if (simple.length) {
+        html += `<section><div class="section-title">More About This Coffee</div>${toRows(simple)}</section>`;
+      }
+      for (const [key, obj] of groups) {
+        const rows = Object.entries(obj).filter(([, v]) => v != null && v !== '');
+        if (rows.length) {
+          html += `<section><div class="section-title">${esc(prettyLabel(key))}</div>${toRows(rows)}</section>`;
+        }
+      }
+      return html;
     }
 
     const resultEl = document.getElementById('result');
@@ -286,7 +434,33 @@
         </div>`;
     }
 
-    function renderRecord(r, batchId) {
+    const HERO_KEYS = ['country', 'region', 'subregion', 'processing', 'elevation', 'cultivar', 'flavor'];
+
+    function renderHero(coffee, batchId, roastDate) {
+      const chips = String(coffee.flavor || '').split(',').map(f => f.trim()).filter(Boolean)
+        .map(f => `<span class="hero-chip">${esc(f)}</span>`).join('');
+      const stat = (label, value, full) => value
+        ? `<div class="hero-stat${full ? ' full' : ''}"><div class="hero-stat-label">${label}</div><div class="hero-stat-value">${esc(value)}</div></div>`
+        : '';
+      return `
+        <header class="hero">
+          <div class="hero-eyebrow">
+            <span>Batch ${esc(batchId)}</span>
+            <span>Roasted ${esc(roastDate)}</span>
+          </div>
+          <h2 class="hero-title">${esc(coffee.country || '')}</h2>
+          ${coffee.region ? `<div class="hero-region">${esc(coffee.region)}</div>` : ''}
+          ${coffee.subregion ? `<div class="hero-loc">${esc(coffee.subregion)}</div>` : ''}
+          ${chips ? `<div class="hero-chips">${chips}</div>` : ''}
+          <div class="hero-stats">
+            ${stat('Processing', coffee.processing)}
+            ${stat('Elevation', coffee.elevation)}
+            ${stat('Cultivar', coffee.cultivar, true)}
+          </div>
+        </header>`;
+    }
+
+    function renderRecord(r, batchId, coffee) {
       const c = r.computed;
       const weightLoss = c.weight_loss != null ? c.weight_loss.toFixed(1) : '—';
       const devTime = (c.totaltime && c.FCs_time)
@@ -295,26 +469,29 @@
 
       resultEl.innerHTML = `
         <article class="record">
+          ${coffee ? renderHero(coffee, batchId, formatDate(r.roastisodate)) : `
           <div class="record-header">
             <div>
               <div class="record-id">${batchId}</div>
               <div class="record-date">Roast record</div>
             </div>
             <div class="record-date">Roasted ${formatDate(r.roastisodate)}</div>
-          </div>
+          </div>`}
 
           <div class="record-grid">
 
+            ${renderCoffee(coffee, HERO_KEYS)}
+
             <section>
-              <div class="section-title">Bean</div>
+              <div class="section-title">Roast</div>
               ${renderRows([
                 { label: 'Name',   value: r.beans || '—' },
-                { label: 'Title',  value: r.title || '—' },
+                { label: 'Batch No.',  value: r.title || '—' },
               ])}
             </section>
 
             <section>
-              <div class="section-title">Batch</div>
+              <div class="section-title">Weights</div>
               ${renderRows([
                 { label: 'Green weight',   value: r.weight[0] ? `${r.weight[0]} ${r.weight[2]}` : '—' },
                 { label: 'Roasted weight', value: r.weight[1] ? `${r.weight[1]} ${r.weight[2]}` : '—' },
@@ -360,7 +537,7 @@
     function renderError(batch) {
       resultEl.innerHTML = `
         <div class="error-state">
-          No record found for <strong>${batch}</strong>.
+          No record found for <strong>${esc(batch)}</strong>.
           <div class="error-hint">Check the batch number on the bag and try again.</div>
         </div>`;
     }
@@ -380,9 +557,9 @@
       const batch = normalizeBatch(input.value);
       if (!batch) { renderEmpty(); return; }
       try {
-        const record = await fetchBatch(batch);
+        const { roast, coffee } = await fetchBatch(batch);
         saveBatchCookie(batch);
-        renderRecord(record, batch);
+        renderRecord(roast, batch, coffee);
       } catch (err) {
         renderError(batch);
       }
@@ -395,7 +572,7 @@
 
     if (initialBatch) {
       input.value = initialBatch;
-      fetchBatch(initialBatch).then(r => renderRecord(r, initialBatch)).catch(() => renderError(initialBatch));
+      fetchBatch(initialBatch).then(({ roast, coffee }) => renderRecord(roast, initialBatch, coffee)).catch(() => renderError(initialBatch));
     } else {
       renderEmpty();
     }
