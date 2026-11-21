@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="rhr.css" />
   <link rel="icon" type="image/png" href="images/MokaShaded.png">
   <link rel="stylesheet" href="rhr-bg-additions.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.css" />
+  <link rel="stylesheet" href="origin-map.css" />
   <style>
     .next-roast-box{
       display: inline-flex;
@@ -191,10 +194,11 @@
 
           </div>
 
-          <div class="hero-photo-panel">
-            <img src="/images/030.jpg">
+          <div class="origin-map-wrap" id="origins-map-wrap" style="max-width: 640px; margin: 32px 0;">
+            <div class="origin-map-label">Where our coffee grows</div>
+            <div id="origins-map" class="origin-map" role="img" aria-label="Map of coffee farm locations"></div>
           </div>
-        
+
 
           <!--
             ═══════════════════════════════════════════════
@@ -299,6 +303,9 @@
     </form>
   </section>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.js"></script>
+  <script src="origin-map.js"></script>
   <script src="order.js"></script>
 
   <script>
@@ -312,28 +319,28 @@
       var demoOrigins = [
         {
           country: "Ethiopia", region: "Kayon Mountain",
-          subregion: "Kayon Mountain Farm, Guji",
+          subregion: "Kayon Mountain Farm, Guji", lat: 5.75, lng: 38.95,
           processing: "Natural", elevation: "1,900 – 2,200 m",
           cultivar: "Heirloom Ethiopian Varieties",
           flavor: "Dark fruit, spice, chocolate", price: 15
         },
         {
           country: "Org. Honduras", region: "COMSA",
-          subregion: "Marcala, La Paz",
+          subregion: "Marcala, La Paz", lat: 14.15, lng: -88.04,
           processing: "Washed", elevation: "1,300 – 1,700 m",
           cultivar: "Bourbon, Catuai, Caturra, Lempira, Ihcafe 90, Pacas, and Typica",
           flavor: "Chocolate, floral, nutty", price: 12
         },
         {
           country: "Decaf Org. Honduras", region: "COMSA",
-          subregion: "Marcala, La Paz",
+          subregion: "Marcala, La Paz", lat: 14.15, lng: -88.04,
           processing: "Mountain Water Decaf Process", elevation: "1,300 – 1,700 m",
           cultivar: "Bourbon, Catuai, Caturra, Ihcafe-90, Lempira, and Parainema",
           flavor: "Red fruit, maple, cocoa", price: 14
         },
         {
           country: "Nicaragua", region: "Selva Negra",
-          subregion: "Matagalpa",
+          subregion: "Matagalpa", lat: 12.99, lng: -85.93,
           processing: "Washed", elevation: "1,200 m",
           cultivar: "Bourbon and Typica strains",
           flavor: "Citrus, floral, malty tones", price: 12
@@ -394,6 +401,15 @@
         }).join('');
       }
 
+      /* ── Origins map — same list as the cards (code in origin-map.js) ── */
+      var originsMap = null;
+      function renderMap(origins) {
+        var wrap = document.getElementById('origins-map-wrap');
+        if (originsMap) { originsMap.remove(); originsMap = null; }
+        originsMap = OriginMap.render(document.getElementById('origins-map'), origins);
+        if (wrap) wrap.style.display = originsMap ? '' : 'none';   // hide if no coordinates
+      }
+
       /* ── One fetch, both features ── */
       fetch('https://api.github.com/gists/' + GIST_ID)
         .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
@@ -402,15 +418,14 @@
           renderDate(dateFile ? dateFile.content.trim() : demoDate);
 
           var originsFile = gist.files['origins.json'];
-          if (originsFile) {
-            renderOrigins(JSON.parse(originsFile.content));
-          } else {
-            renderOrigins(demoOrigins);
-          }
+          var origins = originsFile ? JSON.parse(originsFile.content) : demoOrigins;
+          renderOrigins(origins);
+          renderMap(origins);
         })
         .catch(function () {
           renderDate(demoDate);
           renderOrigins(demoOrigins);
+          renderMap(demoOrigins);
         });
     })();
   </script>

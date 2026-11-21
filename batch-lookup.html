@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Russell Home Roasting — Roast Record Lookup</title>
   <link rel="stylesheet" href="rhr.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.css" />
+  <link rel="stylesheet" href="origin-map.css" />
   <style>
     /* ── Hero ── */
     .hero{
@@ -121,6 +124,9 @@
     </div>
   </main>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.js"></script>
+  <script src="origin-map.js"></script>
   <script>
     // ---- Coffee details (same Gist as coffee.html) ----
     const GIST_ID = '483d480b06dbd04810597ddb55db492e';
@@ -153,6 +159,13 @@
         );
       }
       return value;
+    }
+
+    // ---- Farm map (shared code lives in origin-map.js) ----
+    let batchMap = null;
+    function renderMap(coffee) {
+      if (batchMap) { batchMap.remove(); batchMap = null; }
+      batchMap = OriginMap.render(document.getElementById('origin-map'), coffee);
     }
 
     // Roast data is required; coffee details are a bonus (record still shows if the Gist is down)
@@ -194,7 +207,7 @@
     // each top-level object (origin, brewing, ...) becomes its own section.
     function renderCoffee(coffee, exclude = []) {
       if (!coffee) return '';
-      const entries = Object.entries(coffee).filter(([k, v]) => !exclude.includes(k) && v != null && v !== '');
+      const entries = Object.entries(coffee).filter(([k, v]) => !exclude.includes(k) && !OriginMap.COORD_KEYS.includes(k.toLowerCase()) && v != null && v !== '');
       const isGroup = v => v && typeof v === 'object' && !Array.isArray(v);
 
       const simple = entries.filter(([, v]) => !isGroup(v));
@@ -207,7 +220,7 @@
         html += `<section><div class="section-title">More About This Coffee</div>${toRows(simple)}</section>`;
       }
       for (const [key, obj] of groups) {
-        const rows = Object.entries(obj).filter(([, v]) => v != null && v !== '');
+        const rows = Object.entries(obj).filter(([k, v]) => !OriginMap.COORD_KEYS.includes(k.toLowerCase()) && v != null && v !== '');
         if (rows.length) {
           html += `<section><div class="section-title">${esc(prettyLabel(key))}</div>${toRows(rows)}</section>`;
         }
@@ -419,17 +432,6 @@
 
           </svg>
 
-          <!-- Chart legend -->
-          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-family:Arial,Helvetica,sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);">
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:2px solid var(--fg);"></span> Bean temperature</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:2px dashed #c4a882;"></span> Rate of rise</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px solid var(--muted);"></span> Charge</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> Turning Point</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> Dry End</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> First Crack</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px dashed var(--muted);"></span> First Crack End</span>
-            <span style="display:flex;align-items:center;gap:5px;"><span style="display:inline-block;width:20px;border-top:1px solid var(--muted);"></span> Drop</span>
-          </div>
           <div class="chart-note" style="margin-top:6px;">Bean temperature over roast duration. Shaded regions show roast phases.</div>
         </div>`;
     }
@@ -478,6 +480,12 @@
             <div class="record-date">Roasted ${formatDate(r.roastisodate)}</div>
           </div>`}
 
+          ${coffee && OriginMap.findCoords(coffee) ? `
+          <div class="origin-map-wrap">
+            <div class="origin-map-label">Where it grew</div>
+            <div id="origin-map" class="origin-map" role="img" aria-label="Map of the farm location"></div>
+          </div>` : ''}
+
           <div class="record-grid">
 
             ${renderCoffee(coffee, HERO_KEYS)}
@@ -485,39 +493,10 @@
             <section>
               <div class="section-title">Roast</div>
               ${renderRows([
-                { label: 'Name',   value: r.beans || '—' },
-                { label: 'Batch No.',  value: r.title || '—' },
-              ])}
-            </section>
-
-            <section>
-              <div class="section-title">Weights</div>
-              ${renderRows([
-                { label: 'Green weight',   value: r.weight[0] ? `${r.weight[0]} ${r.weight[2]}` : '—' },
-                { label: 'Roasted weight', value: r.weight[1] ? `${r.weight[1]} ${r.weight[2]}` : '—' },
-                { label: 'Weight loss',    value: `${weightLoss} %` },
-              ])}
-            </section>
-
-            <section>
-              <div class="section-title">Profile</div>
-              ${renderRows([
-                { label: 'Charge temperature', value: c.CHARGE_BT   != null ? `${c.CHARGE_BT.toFixed(1)} °F`  : '—' },
-                { label: 'Drop temperature',   value: c.DROP_BT     != null ? `${c.DROP_BT.toFixed(1)} °F`    : '—' },
-                { label: 'Total time',         value: c.totaltime   != null ? secondsToMinSec(c.totaltime)    : '—' },
-                { label: 'Dry end',            value: c.DRY_time    != null ? secondsToMinSec(c.DRY_time)     : '—' },
-                { label: 'First crack',        value: c.FCs_time    != null ? secondsToMinSec(c.FCs_time)     : '—' },
-                { label: 'Development',        value: devTime },
-              ])}
-            </section>
-
-            <section>
-              <div class="section-title">Rate of Rise</div>
-              ${renderRows([
-                { label: 'Drying phase',      value: c.dry_phase_ror    != null ? `${c.dry_phase_ror.toFixed(1)} °F/min`    : '—' },
-                { label: 'Maillard phase',    value: c.mid_phase_ror    != null ? `${c.mid_phase_ror.toFixed(1)} °F/min`    : '—' },
-                { label: 'Development phase', value: c.finish_phase_ror != null ? `${c.finish_phase_ror.toFixed(1)} °F/min` : '—' },
-                { label: 'Area under curve',  value: c.AUC              != null ? c.AUC                                     : '—' },
+                { label: 'Total time',  value: c.totaltime != null ? secondsToMinSec(c.totaltime) : '—' },
+                { label: 'First crack', value: c.FCs_time  != null ? secondsToMinSec(c.FCs_time)  : '—' },
+                { label: 'Development', value: devTime },
+                { label: 'Weight loss', value: `${weightLoss} %` },
               ])}
             </section>
 
@@ -528,6 +507,8 @@
 
           </div>
         </article>`;
+
+      renderMap(coffee);
     }
 
     function renderEmpty() {
