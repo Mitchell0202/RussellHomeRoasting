@@ -137,7 +137,16 @@
       if (!originsPromise) {
         originsPromise = fetch('https://api.github.com/gists/' + GIST_ID)
           .then(r => { if (!r.ok) throw new Error('Gist fetch failed'); return r.json(); })
-          .then(gist => JSON.parse(gist.files['origins.json'].content))
+          .then(gist => {
+            // In-stock list is required; archive (out-of-stock) is optional
+            const inStock = JSON.parse(gist.files['origins.json'].content);
+            let archived = [];
+            try {
+              const file = gist.files['origins-archive.json'];
+              if (file) archived = JSON.parse(file.content);
+            } catch (e) { /* bad or missing archive shouldn't break lookups */ }
+            return [...inStock, ...(Array.isArray(archived) ? archived : [])];
+          })
           .catch(() => { originsPromise = null; return null; }); // retry on next lookup
       }
       return originsPromise;
