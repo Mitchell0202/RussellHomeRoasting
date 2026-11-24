@@ -119,7 +119,7 @@ header {
 
 .brand {
   font-family: "Playfair Display", Georgia, serif;
-  font-size: clamp(2.5rem, 4vw, 3rem);
+  font-size: clamp(2.1rem, 3.4vw, 2.6rem);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: 0.01em;
