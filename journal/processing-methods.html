@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Processing Methods - Russell Home Roasting</title>
   <link rel="stylesheet" href="../rhr.css" />
-  <link rel="icon" type="image/png" href="../images/MokaShaded.png">
+  <link rel="icon" href="../favicon.ico" sizes="48x48"/>
   <style>
     .article-meta {
       display: flex;
@@ -82,10 +82,15 @@
     <div class="content">
 
       <header>
-        <h1 class="brand">
-          Russell Home Roasting
-          <span>Journal</span>
-        </h1>
+        <div class="brand-lockup">
+          <a class="brand-mark" href="../index.html" tabindex="-1" aria-hidden="true">
+            <img src="../images/MokaShaded.png" width="917" height="917" alt="" />
+          </a>
+          <h1 class="brand">
+            Russell Home Roasting
+            <span>Journal</span>
+          </h1>
+        </div>
       </header>
 
       <div class="body-grid">
@@ -127,11 +132,11 @@
         </div>
 
         <nav class="side-nav" aria-label="Main navigation">
-          <a href="journal.html">Journal</a>
-          <a href="coffee.html">Coffee</a>
-          <a href="batch-lookup.html">Batches</a>
-          <a href="about.html">About</a>
-          <a href="index.html">Home</a>
+          <a href="../journal.html" class="active">Journal</a>
+          <a href="../coffee.html">Coffee</a>
+          <a href="../batch-lookup.html">Batches</a>
+          <a href="../about.html">About</a>
+		  <a href="../index.html">Home</a>
         </nav>
 
       </div>
@@ -143,6 +148,6 @@
 
     </div>
   </main>
-
+<script src="../rhr-header.js"></script>
 </body>
 </html>

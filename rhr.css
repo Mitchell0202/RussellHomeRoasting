@@ -93,6 +93,29 @@ header {
   position: relative;
 }
 
+/* Moka pot sits to the left of the text title.
+   --mark-size is set by the script below to match the title's height
+   (one line of text = one line tall; wrapped text = taller).
+   The clamp() value is the fallback if scripts don't run. */
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2.5vw, 20px);
+}
+.brand-lockup .brand { margin: 0; min-width: 0; }
+.brand-mark {
+  flex: 0 0 auto;
+  display: block;
+  line-height: 0;
+}
+.brand-mark img {
+  display: block;
+  width: var(--mark-size, clamp(48px, 9vw, 80px));
+  height: var(--mark-size, clamp(48px, 9vw, 80px));
+  max-width: 22vw;
+  max-height: 22vw;
+  object-fit: contain;
+}
 
 .brand {
   font-family: "Playfair Display", Georgia, serif;
